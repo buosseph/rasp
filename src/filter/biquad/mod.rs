@@ -1,3 +1,5 @@
+//! Biquads are a popular choice for implementing
+//! common audio filters.
 use Filter;
 
 /// Single channel, second-order filter.
@@ -9,11 +11,11 @@ pub struct Biquad {
   x_z2: f64,
   y_z1: f64,
   y_z2: f64,
-  b0: f64,
-  b1: f64,
-  b2: f64,
-  a1: f64,
-  a2: f64
+  pub b0: f64,
+  pub b1: f64,
+  pub b2: f64,
+  pub a1: f64,
+  pub a2: f64
 }
 
 impl Biquad {
@@ -35,7 +37,7 @@ impl Biquad {
     }
   }
 
-  /// Sets all filter coefficients.
+  /// Sets all filter coefficients at once.
   ///
   /// `b0`, `b1`, `b2` are feedforwards and `a1`, `a2` are feedbacks.
   #[allow(dead_code)]
@@ -75,7 +77,7 @@ mod tests {
   use super::*;
 
   #[test]
-  fn test_tick() {
+  fn tick() {
     let input = vec![0.55f64, 0.55f64, 0.55f64, 0.55f64, 0.25f64];
     let mut biquad = Biquad::new();
     assert!((biquad.tick(input[0]) - 0.55f64).abs() < EPSILON);

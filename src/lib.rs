@@ -1,7 +1,13 @@
 pub mod filter;
 
 pub use filter::Biquad;
+pub use filter::Lowpass;
 
+/// A linear time-invariant system that
+/// processes audio samples
+///
+/// This includes various audio filters
+/// and delays
 pub trait Filter {
   /// Processes sample and stores input and output to memory
   fn tick(&mut self, sample: f64) -> f64;
