@@ -1,0 +1,4 @@
+[package]
+name = "audio-dsp"
+version = "0.1.0"
+authors = ["Brian Uosseph <brian.uosseph@gmail.com>"]
