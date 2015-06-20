@@ -3,6 +3,11 @@
 pub mod lowpass;
 
 use Filter;
+use std::f64::MIN_POSITIVE;
+
+const MIN_SAMPLE_RATE: f64 = MIN_POSITIVE;
+const MIN_FREQUENCY: f64 = 0f64;
+const MIN_Q: f64 = MIN_POSITIVE;
 
 /// Single channel, second-order filter.
 ///

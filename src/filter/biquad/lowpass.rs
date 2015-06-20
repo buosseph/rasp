@@ -1,20 +1,25 @@
 use Filter;
-use filter::biquad::Biquad;
 use std::f64::consts::PI;
+use filter::biquad::Biquad;
+use filter::biquad::{
+  MIN_SAMPLE_RATE,
+  MIN_FREQUENCY,
+  MIN_Q
+};
 
 /// Lowpass biquad filter.
 pub struct Lowpass {
-  pub sample_rate: f64,
-  pub cutoff: f64,
-  pub q: f64,
+  sample_rate: f64,
+  cutoff: f64,
+  q: f64,
   biquad: Biquad
 }
 
 impl Lowpass {
   /// Constructs a new `Lowpass`.
   ///
-  /// The filter will not alter the signal
-  /// unitl the coefficients are changed.
+  /// Unlike a `Biquad`, the coefficients
+  /// are immediately calculated.
   pub fn new(sample_rate: f64, cutoff: f64, q: f64) -> Self {
     let mut lpf =
       Lowpass {
@@ -27,12 +32,68 @@ impl Lowpass {
     lpf
   }
 
+  /// Sets the filter sample rate.
+  ///
+  /// Lowpass filters require knowledge
+  /// of the sample rate of the audio
+  /// input in order to calculate
+  /// the correct coefficients.
+  ///
+  /// The sample rate must be a positive non-zero value.
+  /// If not, the value is clipped.
+  pub fn set_sample_rate(&mut self, new_sample_rate: f64) {
+    let mut fs = new_sample_rate;
+    if fs < MIN_SAMPLE_RATE {
+      fs = MIN_SAMPLE_RATE;
+    }
+    self.sample_rate = fs;
+    self.update_coefficients();
+  }
+
+  /// Sets the filter frequency cutoff.
+  ///
+  /// The frequency must satisfy `0 Hz <= cutoff <= Fs/2`
+  /// where `Fs/2` is the Nyquist frequency, or 
+  /// half the sample rate of the input audio.
+  /// If not, the value will be clipped.
+  pub fn set_cutoff(&mut self, new_cutoff: f64) {
+    let mut fc = new_cutoff;
+    if fc < MIN_FREQUENCY {
+      fc = MIN_FREQUENCY;
+    }
+    if fc > self.sample_rate / 2f64 {
+      fc = self.sample_rate / 2f64;
+    }
+    self.cutoff = fc;
+    self.update_coefficients();
+  }
+
+  /// Sets the filter Q value.
+  ///
+  /// The Q value must be a positive non-zero value.
+  /// If not, the value is clipped.
+  pub fn set_q(&mut self, new_q: f64) {
+    let mut _q = new_q;
+    if _q < MIN_Q { _q = MIN_Q; }
+    self.q = _q;
+    self.update_coefficients();
+  }
+
+  /// Returns the sample rate of the audio
+  /// passed through the filter.
+  pub fn sample_rate(&self) -> f64 { self.sample_rate }
+
+  /// Returns the frequency cutoff of the filter.
+  pub fn cutoff(&self) -> f64 { self.cutoff }
+
+  /// Returns the Q value of the filter.
+  pub fn q(&self) -> f64 { self.q }
+
   /// Updates `Biquad` coefficients.
   ///
-  /// `Biquad` coefficients are
-  /// calculated from the `sample_rate`,
-  /// `cutoff`, and `q`.
-  pub fn update_coefficients(&mut self) {
+  /// `Biquad` coefficients are calculated
+  /// from the `sample_rate`, `cutoff`, and `q`.
+  fn update_coefficients(&mut self) {
     let w0 = 2f64 * PI * self.cutoff / self.sample_rate;
     let cos_w0  = w0.cos();
     let alpha   = w0.sin() / (2f64 * self.q);
@@ -65,6 +126,11 @@ impl Filter for Lowpass {
 mod tests {
   use Filter;
   use std::f64::consts::PI;
+  use filter::biquad::{
+    MIN_SAMPLE_RATE,
+    MIN_FREQUENCY,
+    MIN_Q
+  };
   use super::*;
 
   /*
@@ -127,5 +193,22 @@ mod tests {
       abs_diff = (expected[i] - actual).abs();
       assert!(abs_diff < 1e-10);
     }
+  }
+
+  #[test]
+  fn accessors() {
+    let mut filter = Lowpass::new(44_100f64, 8_000f64, 0.71f64);
+    filter.set_sample_rate(-2_000f64);
+    assert_eq!(MIN_SAMPLE_RATE, filter.sample_rate());
+    filter.set_sample_rate(192_000f64);
+    assert_eq!(192_000f64, filter.sample_rate());
+    filter.set_cutoff(-20f64);
+    assert_eq!(MIN_FREQUENCY, filter.cutoff());
+    filter.set_cutoff(200_000f64);
+    assert_eq!(192_000f64 / 2f64, filter.cutoff());
+    filter.set_q(-10f64);
+    assert_eq!(MIN_Q, filter.q());
+    filter.set_q(4f64);
+    assert_eq!(4f64, filter.q());
   }
 }
