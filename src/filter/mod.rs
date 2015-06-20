@@ -1,5 +1,4 @@
 pub mod biquad;
-pub mod lowpass;
 
 pub use self::biquad::Biquad as Biquad;
-pub use self::lowpass::Lowpass as Lowpass;
+pub use self::biquad::lowpass::Lowpass as Lowpass;

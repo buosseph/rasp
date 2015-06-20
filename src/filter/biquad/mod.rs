@@ -1,5 +1,7 @@
 //! Biquads are a popular choice for implementing
 //! common audio filters.
+pub mod lowpass;
+
 use Filter;
 
 /// Single channel, second-order filter.
