@@ -4,6 +4,8 @@ pub use filter::Biquad;
 pub use filter::Lowpass;
 pub use filter::Highpass;
 
+pub use filter::OnePole;
+
 /// A linear time-invariant system that
 /// processes audio samples
 ///
@@ -15,8 +17,4 @@ pub trait Filter {
 
   /// Resets memory of all previous input and output to zero
   fn clear(&mut self);
-}
-
-#[test]
-fn it_works() {
 }

@@ -14,6 +14,8 @@ const MIN_Q: f64 = MIN_POSITIVE;
 ///
 /// A `Biquad` is a type of second-order `Filter` that uses the following equation:
 /// > y[n] = b0*x[n] + b1*x[n-1] + b2*x[n-2] - a1*y[n-1] - a2*y[n-2]
+/// It has two feedforward coefficients `b1` and `b2`,
+/// and two feedback coefficients `a1` and `a2`.
 pub struct Biquad {
   x_z1: f64,
   x_z2: f64,
@@ -47,7 +49,8 @@ impl Biquad {
 
   /// Sets all filter coefficients at once.
   ///
-  /// `b0`, `b1`, `b2` are feedforwards and `a1`, `a2` are feedbacks.
+  /// `b1`, `b2` are feedforwards, or zeroes,
+  /// and `a1`, `a2` are feedbacks, or poles.
   #[allow(dead_code)]
   pub fn set_coefficients(&mut self, b0: f64, b1: f64, b2: f64, a1: f64, a2: f64) {
     self.b0 = b0;
@@ -84,16 +87,42 @@ mod tests {
   use std::f64::EPSILON;
   use super::*;
 
+  /*
+   *  Octave input used to test, print all values to 12 decimal point for use in tests
+   *
+   *  input, output
+   *  x, y
+   *
+   *  clear
+   *  x_z1 = x_z2 = y_z1 = y_z2 = 0
+   *
+   *  tick (and print y)
+   *  y = b0 * x + b1 * x_z1 + b2 * x_z2 - a1 * y_z1 - a2 * y_z2; x_z2 = x_z1; x_z1 = x; y_z2 = y_z1; y_z1 = y; printf("%.12f\n", y)
+   *
+   *  print to 12 decimal places
+   *  printf("%.12f\n", y)
+   *  printf("%.12f\n", b0), printf("%.12f\n", b1), printf("%.12f\n", b2), printf("%.12f\n", a1), printf("%.12f\n", a2)
+   */
+
   #[test]
   fn tick() {
-    let input = vec![0.55f64, 0.55f64, 0.55f64, 0.55f64, 0.25f64];
+    let input = vec![0.55f64, -0.55f64, 0.55f64, -0.55f64, 0.25f64];
+    let expected =
+      vec![
+         0.275_000_000_000f64,
+        -0.110_000_000_000f64,
+         0.214_500_000_000f64,
+        -0.251_900_000_000f64,
+         0.098_930_000_000f64
+      ];
     let mut biquad = Biquad::new();
-    assert!((biquad.tick(input[0]) - 0.55f64).abs() < EPSILON);
+    for sample in input.iter() {
+      assert!((biquad.tick(*sample) - sample).abs() < EPSILON);
+    }
     biquad.clear();
     biquad.set_coefficients(0.5f64, 0.4f64, 0.3f64, 0.2f64, 0.1f64);
-    assert!((biquad.tick(input[1]) - 0.275f64).abs() < EPSILON);
-    assert!((biquad.tick(input[2]) - 0.44f64).abs() < EPSILON);
-    assert!((biquad.tick(input[3]) - 0.5445f64).abs() < EPSILON);
-    assert!((biquad.tick(input[4]) - 0.3571f64).abs() < EPSILON);
+    for i in 0..input.len() {
+      assert!((expected[i] - biquad.tick(input[i])).abs() < EPSILON);
+    }
   }
 }
