@@ -5,6 +5,9 @@ pub use filter::Lowpass;
 pub use filter::Highpass;
 
 pub use filter::OnePole;
+pub use filter::OneZero;
+pub use filter::TwoPole;
+pub use filter::TwoZero;
 
 /// A linear time-invariant system that
 /// processes audio samples

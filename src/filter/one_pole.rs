@@ -10,7 +10,7 @@ use Filter;
 pub struct OnePole {
   y_z1: f64,
   pub b0: f64,
-  pub a1: f64,
+  pub a1: f64
 }
 
 impl OnePole {
@@ -22,7 +22,7 @@ impl OnePole {
     OnePole {
       y_z1: 0f64,
       b0: 1f64,
-      a1: 0f64,
+      a1: 0f64
     }
   }
 
@@ -85,7 +85,9 @@ mod tests {
     one_pole.clear();
     one_pole.set_coefficients(0.5f64, 0.1f64);
     for i in 0..input.len() {
-      assert!((expected[i] - one_pole.tick(input[i])).abs() < EPSILON);
+      let output = one_pole.tick(input[i]);
+      println!("{:.12} - {:.12} = {:.12}", expected[i], output, expected[i] - output);
+      assert!((expected[i] - output).abs() < EPSILON);
     }
   }
 }

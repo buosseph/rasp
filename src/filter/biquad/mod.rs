@@ -122,7 +122,9 @@ mod tests {
     biquad.clear();
     biquad.set_coefficients(0.5f64, 0.4f64, 0.3f64, 0.2f64, 0.1f64);
     for i in 0..input.len() {
-      assert!((expected[i] - biquad.tick(input[i])).abs() < EPSILON);
+      let output = biquad.tick(input[i]);
+      println!("{:.12} - {:.12} = {:.12}", expected[i], output, expected[i] - output);
+      assert!((expected[i] - output).abs() < EPSILON);
     }
   }
 }

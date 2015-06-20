@@ -9,7 +9,10 @@ fn api() {
   use audio_dsp::filter::Lowpass;
   use audio_dsp::filter::Highpass;
 
+  use audio_dsp::filter::OneZero;
   use audio_dsp::filter::OnePole;
+  use audio_dsp::filter::TwoZero;
+  use audio_dsp::filter::TwoPole;
 
   let input = vec![0.1f64, 0.1f64, 0.1f64, 0.1f64];
   let mut output: f64;
@@ -26,8 +29,19 @@ fn api() {
   output = highpass.tick(input[0]);
   assert!(output != 0.1f64);
 
+  let mut one_zero = OneZero::new();
+  output = one_zero.tick(input[0]);
+  assert_eq!(0.1f64, output);
+
   let mut one_pole = OnePole::new();
   output = one_pole.tick(input[0]);
   assert_eq!(0.1f64, output);
 
+  let mut two_zero = TwoZero::new();
+  output = two_zero.tick(input[0]);
+  assert_eq!(0.1f64, output);
+
+  let mut two_pole = TwoPole::new();
+  output = two_pole.tick(input[0]);
+  assert_eq!(0.1f64, output);
 }
