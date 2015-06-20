@@ -7,34 +7,34 @@ use filter::biquad::{
   MIN_Q
 };
 
-/// Lowpass biquad filter.
-pub struct Lowpass {
+/// Highpass biquad filter.
+pub struct Highpass {
   sample_rate: f64,
   cutoff: f64,
   q: f64,
   biquad: Biquad
 }
 
-impl Lowpass {
-  /// Constructs a new `Lowpass`.
+impl Highpass {
+  /// Constructs a new `Highpass`.
   ///
   /// Unlike a `Biquad`, the coefficients
   /// are immediately calculated.
   pub fn new(sample_rate: f64, cutoff: f64, q: f64) -> Self {
-    let mut lpf =
-      Lowpass {
+    let mut hpf =
+      Highpass {
         sample_rate: sample_rate,
         cutoff: cutoff,
         q: q,
         biquad: Biquad::new()
       };
-    lpf.update_coefficients();
-    lpf
+    hpf.update_coefficients();
+    hpf
   }
 
   /// Sets the filter sample rate.
   ///
-  /// Lowpass filters require knowledge
+  /// Highpass filters require knowledge
   /// of the sample rate of the audio
   /// input in order to calculate
   /// the correct coefficients.
@@ -97,8 +97,8 @@ impl Lowpass {
     let w0 = 2f64 * PI * self.cutoff / self.sample_rate;
     let cos_w0  = w0.cos();
     let alpha   = w0.sin() / (2f64 * self.q);
-    let mut b0  = (1f64 - cos_w0) / 2f64;
-    let mut b1  =  1f64 - cos_w0;
+    let mut b0  = (1f64 + cos_w0) / 2f64;
+    let mut b1  = -1f64 - cos_w0;
     let mut b2  =  b0;
     let     a0  =  1f64 + alpha;
     let mut a1  = -2f64 * cos_w0;
@@ -112,7 +112,7 @@ impl Lowpass {
   }
 }
 
-impl Filter for Lowpass {
+impl Filter for Highpass {
   fn tick(&mut self, sample: f64) -> f64 {
     self.biquad.tick(sample)
   }
@@ -143,7 +143,7 @@ mod tests {
    *  w0 = 2 * pi * cutoff / fs; cos_w0 = cos(w0); alpha = sin(w0) / (2 * q); printf("%.12f\n", w0), printf("%.12f\n", cos_w0), printf("%.12f\n", alpha)
    *
    *  calc_coeffs
-   *  a0 = 1 + alpha; b0 = ((1-cos_w0)/2)/a0; b1 = (1-cos_w0)/a0; b2 = b0; a1 = (-2*cos_w0)/a0; a2 = (1-alpha)/a0;
+   *  a0 = 1 + alpha; b0 = ((1+cos_w0)/2)/a0; b1 = -(1+cos_w0)/a0; b2 = b0; a1 = (-2*cos_w0)/a0; a2 = (1-alpha)/a0;
    *
    *  clear
    *  x_z1 = x_z2 = y_z1 = y_z2 = 0
@@ -158,39 +158,39 @@ mod tests {
 
   #[test]
   fn new() {
-    let lpf = Lowpass::new(44_100f64, 1_200f64, 1f64);
-    assert!((lpf.sample_rate - 44_100f64).abs() < 1e-10);
-    assert!((lpf.cutoff - 1_200f64      ).abs() < 1e-10);
-    assert!((lpf.q - 1f64               ).abs() < 1e-10);
-    let w0      = 2f64 * PI * lpf.cutoff / lpf.sample_rate;
+    let hpf = Highpass::new(44_100f64, 1_200f64, 1f64);
+    assert!((hpf.sample_rate - 44_100f64).abs() < 1e-10);
+    assert!((hpf.cutoff - 1_200f64      ).abs() < 1e-10);
+    assert!((hpf.q - 1f64               ).abs() < 1e-10);
+    let w0      = 2f64 * PI * hpf.cutoff / hpf.sample_rate;
     let cos_w0  = w0.cos();
-    let alpha   = w0.sin() / (2f64 * lpf.q);
+    let alpha   = w0.sin() / (2f64 * hpf.q);
     assert!(( 0.170_971_028_767f64 - w0            ).abs() < 1e-10);
     assert!(( 0.985_420_021_355f64 - cos_w0        ).abs() < 1e-10);
     assert!(( 0.085_069_650_158f64 - alpha         ).abs() < 1e-10);
-    assert!(( 0.006_718_452_886f64 - lpf.biquad.b0 ).abs() < 1e-10);
-    assert!(( 0.013_436_905_772f64 - lpf.biquad.b1 ).abs() < 1e-10);
-    assert!(( 0.006_718_452_886f64 - lpf.biquad.b2 ).abs() < 1e-10);
-    assert!((-1.816_325_839_012f64 - lpf.biquad.a1 ).abs() < 1e-10);
-    assert!(( 0.843_199_650_555f64 - lpf.biquad.a2 ).abs() < 1e-10);
+    assert!(( 0.914_881_372_392f64 - hpf.biquad.b0 ).abs() < 1e-10);
+    assert!((-1.829_762_744_784f64 - hpf.biquad.b1 ).abs() < 1e-10);
+    assert!(( 0.914_881_372_392f64 - hpf.biquad.b2 ).abs() < 1e-10);
+    assert!((-1.816_325_839_012f64 - hpf.biquad.a1 ).abs() < 1e-10);
+    assert!(( 0.843_199_650_555f64 - hpf.biquad.a2 ).abs() < 1e-10);
   }
 
   #[test]
   fn tick() {
     let input = vec![0.5f64, 0.4f64, 0.3f64, 0.2f64, 0.1f64];
-    let mut lpf = Lowpass::new(44_100f64, 8_000f64, 0.71f64);
+    let mut hpf = Highpass::new(44_100f64, 8_000f64, 0.71f64);
     let expected =
       vec![
-        0.088_763_995_825f64,
-        0.293_767_078_666f64,
-        0.414_231_561_951f64,
-        0.359_573_380_268f64,
-        0.234_253_200_384f64
+         0.216_146_415_734f64,
+        -0.149_242_684_917f64,
+        -0.123_518_332_014f64,
+        -0.030_156_347_137f64,
+         0.011_764_215_888f64
       ];
     let mut actual: f64;
     let mut abs_diff: f64;
     for i in 0..input.len() {
-      actual = lpf.tick(input[i]);
+      actual = hpf.tick(input[i]);
       abs_diff = (expected[i] - actual).abs();
       assert!(abs_diff < 1e-10);
     }
@@ -198,7 +198,7 @@ mod tests {
 
   #[test]
   fn accessors() {
-    let mut filter = Lowpass::new(44_100f64, 8_000f64, 0.71f64);
+    let mut filter = Highpass::new(44_100f64, 8_000f64, 0.71f64);
     filter.set_sample_rate(-2_000f64);
     assert_eq!(MIN_SAMPLE_RATE, filter.sample_rate());
     filter.set_sample_rate(192_000f64);

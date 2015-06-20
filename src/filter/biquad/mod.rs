@@ -1,6 +1,7 @@
 //! Biquads are a popular choice for implementing
 //! common audio filters.
 pub mod lowpass;
+pub mod highpass;
 
 use Filter;
 use std::f64::MIN_POSITIVE;

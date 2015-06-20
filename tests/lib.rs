@@ -6,6 +6,7 @@ fn api() {
   use audio_dsp::Filter;
   use audio_dsp::filter::Biquad;
   use audio_dsp::filter::Lowpass;
+  use audio_dsp::filter::Highpass;
 
   let input = vec![0.1f64, 0.1f64, 0.1f64, 0.1f64];
   let mut output: f64;
@@ -15,4 +16,7 @@ fn api() {
 
   let mut lowpass = Lowpass::new(44_100f64, 8_000f64, 0.71f64);
   output = lowpass.tick(input[0]);
+
+  let mut highpass = Highpass::new(44_100f64, 12_000f64, 0.71f64);
+  output = highpass.tick(input[0]);
 }

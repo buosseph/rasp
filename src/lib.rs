@@ -2,6 +2,7 @@ pub mod filter;
 
 pub use filter::Biquad;
 pub use filter::Lowpass;
+pub use filter::Highpass;
 
 /// A linear time-invariant system that
 /// processes audio samples
