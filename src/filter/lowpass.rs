@@ -3,8 +3,6 @@ use filter::biquad::Biquad;
 use std::f64::consts::PI;
 
 /// Lowpass biquad filter.
-///
-/// Uses a biquad to 
 pub struct Lowpass {
   pub sample_rate: f64,
   pub cutoff: f64,
@@ -40,7 +38,7 @@ impl Lowpass {
     let alpha   = w0.sin() / (2f64 * self.q);
     let mut b0  = (1f64 - cos_w0) / 2f64;
     let mut b1  =  1f64 - cos_w0;
-    let mut b2  = b0;
+    let mut b2  =  b0;
     let     a0  =  1f64 + alpha;
     let mut a1  = -2f64 * cos_w0;
     let mut a2  =  1f64 - alpha;
@@ -63,64 +61,71 @@ impl Filter for Lowpass {
   }
 }
 
-
-
 #[cfg(test)]
 mod tests {
   use Filter;
-  use std::f64::EPSILON;
   use std::f64::consts::PI;
   use super::*;
 
   /*
-   *  Octave input used to test
+   *  Octave input used to test, print all values to 12 decimal point for use in tests
    *
    *  input, output
    *  x, y
    *
    *  calc_intermids
-   *  w0 = 2 * pi * cutoff / fs; cos_w0 = cos(w0); alpha = sin(w0) / (2 * q);
+   *  w0 = 2 * pi * cutoff / fs; cos_w0 = cos(w0); alpha = sin(w0) / (2 * q); printf("%.12f\n", w0), printf("%.12f\n", cos_w0), printf("%.12f\n", alpha)
    *
    *  calc_coeffs
-   *  a0 = 1 + alpha; b0 = ((1-cos_w0)/2)/a0; b1 = (1-cos_w0)/a0; b2 = b0/a0; a1 = (-2*cos_w0)/a0; a2 = (1-alpha)/a0;
+   *  a0 = 1 + alpha; b0 = ((1-cos_w0)/2)/a0; b1 = (1-cos_w0)/a0; b2 = b0; a1 = (-2*cos_w0)/a0; a2 = (1-alpha)/a0;
    *
    *  clear
    *  x_z1 = x_z2 = y_z1 = y_z2 = 0
    *
-   *  tick
-   *  y = b0 * x + b1 * x_z1 + b2 * x_z2 - a1 * y_z1 - a2 * y_z2; x_z2 = x_z1; x_z1 = x; y_z2 = y_z1; y_z1 = y;
+   *  tick (and print y)
+   *  y = b0 * x + b1 * x_z1 + b2 * x_z2 - a1 * y_z1 - a2 * y_z2; x_z2 = x_z1; x_z1 = x; y_z2 = y_z1; y_z1 = y; printf("%.12f\n", y)
+   *
+   *  print to 12 decimal places
+   *  printf("%.12f\n", y)
    */
 
-  // Unknown failure
   #[test]
   fn new() {
     let lpf = Lowpass::new(44_100f64, 1_200f64, 1f64);
-    assert!((lpf.sample_rate - 44_100f64).abs() < EPSILON);
-    assert!((lpf.cutoff - 1_200f64).abs() < EPSILON);
-    assert!((lpf.q - 1f64).abs() < EPSILON);
-    let w0 = 2f64 * PI * lpf.cutoff / lpf.sample_rate;
-    let cos_w0 = w0.cos();
-    let alpha = w0.sin() / (2f64 * lpf.q);
-    // These values are all correct
-    assert!((0.170_97f64 - w0).abs() < EPSILON);
-    assert!((0.985_42f64 - cos_w0).abs() < EPSILON);
-    assert!((0.085_07f64 - alpha).abs() < EPSILON);
-    assert!((0.006_718_5f64 - lpf.biquad.b0).abs() < EPSILON);
+    assert!((lpf.sample_rate - 44_100f64).abs() < 1e-10);
+    assert!((lpf.cutoff - 1_200f64      ).abs() < 1e-10);
+    assert!((lpf.q - 1f64               ).abs() < 1e-10);
+    let w0      = 2f64 * PI * lpf.cutoff / lpf.sample_rate;
+    let cos_w0  = w0.cos();
+    let alpha   = w0.sin() / (2f64 * lpf.q);
+    assert!(( 0.170_971_028_767f64 - w0            ).abs() < 1e-10);
+    assert!(( 0.985_420_021_355f64 - cos_w0        ).abs() < 1e-10);
+    assert!(( 0.085_069_650_158f64 - alpha         ).abs() < 1e-10);
+    assert!(( 0.006_718_452_886f64 - lpf.biquad.b0 ).abs() < 1e-10);
+    assert!(( 0.013_436_905_772f64 - lpf.biquad.b1 ).abs() < 1e-10);
+    assert!(( 0.006_718_452_886f64 - lpf.biquad.b2 ).abs() < 1e-10);
+    assert!((-1.816_325_839_012f64 - lpf.biquad.a1 ).abs() < 1e-10);
+    assert!(( 0.843_199_650_555f64 - lpf.biquad.a2 ).abs() < 1e-10);
   }
 
-  // Unknown failure
   #[test]
   fn tick() {
     let input = vec![0.5f64, 0.4f64, 0.3f64, 0.2f64, 0.1f64];
     let mut lowpass = Lowpass::new(44_100f64, 8_000f64, 0.71f64);
-    let expected = vec![0.088_764f64, 0.203_77f64, 0.379_60f64, 0.314_22f64, 0.197_97f64];
+    let expected =
+      vec![
+        0.088_763_995_825f64,
+        0.293_767_078_666f64,
+        0.414_231_561_951f64,
+        0.359_573_380_268f64,
+        0.234_253_200_384f64
+      ];
     let mut actual: f64;
     let mut abs_diff: f64;
     for i in 0..input.len() {
       actual = lowpass.tick(input[i]);
       abs_diff = (expected[i] - actual).abs();
-      println!("iter {}\texpected: {:?}\tactual: {:?}\tabs_diff:{:?}", i, expected[i], actual, abs_diff);
-      assert!(abs_diff < EPSILON);
+      assert!(abs_diff < 1e-10);
     }
   }
 }
