@@ -9,15 +9,28 @@ pub use filter::OneZero;
 pub use filter::TwoPole;
 pub use filter::TwoZero;
 
-/// A linear time-invariant system that
-/// processes audio samples
+/// A DSP component.
 ///
-/// This includes various audio filters
-/// and delays
-pub trait Filter {
-  /// Processes sample and stores input and output to memory
-  fn tick(&mut self, sample: f64) -> f64;
+/// This contains the base functions common in all components implemented in
+/// this library.
+pub trait DspComponent {
+  /// Creates a new `DspComponent`.
+  fn new() -> Self;
 
-  /// Resets memory of all previous input and output to zero
+  /// Processes and stores input sample into memory and outputs calculated
+  /// sample.
+  fn tick(&mut self, sample: f32) -> f32;
+}
+
+/// A digital filter.
+///
+/// A filter is defined as a linear, time-invariant system that processes, in
+/// this case, digital audio samples. This includes traditional filter, such
+/// as lowpass and highpass filters, and delays.
+pub trait Filter {
+  /// Resets memory of all previous input and output to zero.
   fn clear(&mut self);
+
+  /// Returns the last computed output sample.
+  fn last_out(&self) -> f32;
 }
