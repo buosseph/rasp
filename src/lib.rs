@@ -15,6 +15,9 @@ pub use filter::TwoZero;
 /// this library.
 pub trait DspComponent {
   /// Creates a new `DspComponent`.
+  ///
+  /// The component will be initalized in a state that does not alter the
+  /// input signal.
   fn new() -> Self;
 
   /// Processes and stores input sample into memory and outputs calculated

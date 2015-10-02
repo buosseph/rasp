@@ -8,18 +8,25 @@ The design, and general usage, of this library is greatly influenced by [The Syn
 
 ## TODO
 - Main Features
-  - Refactor traits and abstractions
-  - Update documentation
-  - Add examples
-    - Important examples
-      - One per `DspComponent`
-      - Multi-channel data must use one `DspComponent` per channel
-  - Benchmarks and profiling against C++ equivalent
-  - Add delay implementations under mod filter
-  - A better name!
-- Future Additions
-  - Analysis components? (`LeakyIntegrator`, `PeakDetector`)
-  - Generators (see `stk::Generator`)
-  - Pluck-string model (see `stk::Twang`)
-  - Generic support for `f32` and `f64` samples
-  - Common Effects? (Chorus, Flanger, Pitchshift, Echo, Reverb) Would be an optional feature
+  - [ ] Refactor traits and abstractions
+    - [x] Add `DspComponent` to all components
+  - [x] Change sample type to `f32`
+  - [ ] Update documentation
+  - [ ] Update tests
+    - Most tests will fail now that sample type has been changed to `f32`
+  - [ ] Add examples
+    - [ ] One per `DspComponent`
+    - [ ] Multi-channel data using one `DspComponent` per channel
+  - [ ] Benchmarks and profiling against STK C++ equivalent
+  - [ ] Add delay implementations under `mod filter`
+  - [ ] A better name!
+
+### Future Additions
+Features and components I'd like to add in the future, none of which are guaranteed.
+
+- Analysis components? (`LeakyIntegrator`, `PeakDetector`)
+- Vector-based computations? (`tick(&[f32])`)
+- Generators (see `stk::Generator`)
+- Pluck-string model (see `stk::Twang`)
+- Generic support for `f32` and `f64` samples?
+- Common Effects? (Chorus, Flanger, Pitchshift, Echo, Reverb) Would be an optional feature

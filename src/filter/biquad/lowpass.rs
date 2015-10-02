@@ -1,5 +1,6 @@
+use DspComponent;
 use Filter;
-use std::f64::consts::PI;
+use std::f32::consts::PI;
 use filter::biquad::Biquad;
 use filter::biquad::{
   MIN_SAMPLE_RATE,
@@ -9,9 +10,9 @@ use filter::biquad::{
 
 /// Lowpass biquad filter.
 pub struct Lowpass {
-  sample_rate: f64,
-  cutoff: f64,
-  q: f64,
+  sample_rate: f32,
+  cutoff: f32,
+  q: f32,
   biquad: Biquad
 }
 
@@ -20,7 +21,7 @@ impl Lowpass {
   ///
   /// Unlike a `Biquad`, the coefficients
   /// are immediately calculated.
-  pub fn new(sample_rate: f64, cutoff: f64, q: f64) -> Self {
+  pub fn new(sample_rate: f32, cutoff: f32, q: f32) -> Self {
     let mut lpf =
       Lowpass {
         sample_rate: sample_rate,
@@ -41,7 +42,7 @@ impl Lowpass {
   ///
   /// The sample rate must be a positive non-zero value.
   /// If not, the value is clipped.
-  pub fn set_sample_rate(&mut self, new_sample_rate: f64) {
+  pub fn set_sample_rate(&mut self, new_sample_rate: f32) {
     let mut fs = new_sample_rate;
     if fs < MIN_SAMPLE_RATE {
       fs = MIN_SAMPLE_RATE;
@@ -56,13 +57,13 @@ impl Lowpass {
   /// where `Fs/2` is the Nyquist frequency, or 
   /// half the sample rate of the input audio.
   /// If not, the value will be clipped.
-  pub fn set_cutoff(&mut self, new_cutoff: f64) {
+  pub fn set_cutoff(&mut self, new_cutoff: f32) {
     let mut fc = new_cutoff;
     if fc < MIN_FREQUENCY {
       fc = MIN_FREQUENCY;
     }
-    if fc > self.sample_rate / 2f64 {
-      fc = self.sample_rate / 2f64;
+    if fc > self.sample_rate / 2f32 {
+      fc = self.sample_rate / 2f32;
     }
     self.cutoff = fc;
     self.update_coefficients();
@@ -72,7 +73,7 @@ impl Lowpass {
   ///
   /// The Q value must be a positive non-zero value.
   /// If not, the value is clipped.
-  pub fn set_q(&mut self, new_q: f64) {
+  pub fn set_q(&mut self, new_q: f32) {
     let mut _q = new_q;
     if _q < MIN_Q { _q = MIN_Q; }
     self.q = _q;
@@ -81,28 +82,28 @@ impl Lowpass {
 
   /// Returns the sample rate of the audio
   /// passed through the filter.
-  pub fn sample_rate(&self) -> f64 { self.sample_rate }
+  pub fn sample_rate(&self) -> f32 { self.sample_rate }
 
   /// Returns the frequency cutoff of the filter.
-  pub fn cutoff(&self) -> f64 { self.cutoff }
+  pub fn cutoff(&self) -> f32 { self.cutoff }
 
   /// Returns the Q value of the filter.
-  pub fn q(&self) -> f64 { self.q }
+  pub fn q(&self) -> f32 { self.q }
 
   /// Updates `Biquad` coefficients.
   ///
   /// `Biquad` coefficients are calculated
   /// from the `sample_rate`, `cutoff`, and `q`.
   fn update_coefficients(&mut self) {
-    let w0 = 2f64 * PI * self.cutoff / self.sample_rate;
+    let w0 = 2f32 * PI * self.cutoff / self.sample_rate;
     let cos_w0  = w0.cos();
-    let alpha   = w0.sin() / (2f64 * self.q);
-    let mut b0  = (1f64 - cos_w0) / 2f64;
-    let mut b1  =  1f64 - cos_w0;
+    let alpha   = w0.sin() / (2f32 * self.q);
+    let mut b0  = (1f32 - cos_w0) / 2f32;
+    let mut b1  =  1f32 - cos_w0;
     let mut b2  =  b0;
-    let     a0  =  1f64 + alpha;
-    let mut a1  = -2f64 * cos_w0;
-    let mut a2  =  1f64 - alpha;
+    let     a0  =  1f32 + alpha;
+    let mut a1  = -2f32 * cos_w0;
+    let mut a2  =  1f32 - alpha;
     b0 /= a0;
     b1 /= a0;
     b2 /= a0;
@@ -112,20 +113,31 @@ impl Lowpass {
   }
 }
 
-impl Filter for Lowpass {
-  fn tick(&mut self, sample: f64) -> f64 {
-    self.biquad.tick(sample)
+impl DspComponent for Lowpass {
+  fn new() -> Lowpass {
+    Lowpass::new(44_100f32, 20_000f32, 0.71)
   }
 
+  fn tick(&mut self, sample: f32) -> f32 {
+    self.biquad.tick(sample)
+  }
+}
+
+impl Filter for Lowpass {
   fn clear(&mut self) {
     self.biquad.clear();
+  }
+
+  fn last_out(&self) -> f32 {
+    self.biquad.last_out()
   }
 }
 
 #[cfg(test)]
 mod tests {
+  use DspComponent;
   use Filter;
-  use std::f64::consts::PI;
+  use std::f32::consts::PI;
   use filter::biquad::{
     MIN_SAMPLE_RATE,
     MIN_FREQUENCY,
@@ -158,37 +170,37 @@ mod tests {
 
   #[test]
   fn new() {
-    let lpf = Lowpass::new(44_100f64, 1_200f64, 1f64);
-    assert!((lpf.sample_rate - 44_100f64).abs() < 1e-10);
-    assert!((lpf.cutoff - 1_200f64      ).abs() < 1e-10);
-    assert!((lpf.q - 1f64               ).abs() < 1e-10);
-    let w0      = 2f64 * PI * lpf.cutoff / lpf.sample_rate;
+    let lpf = Lowpass::new(44_100f32, 1_200f32, 1f32);
+    assert!((lpf.sample_rate - 44_100f32).abs() < 1e-10);
+    assert!((lpf.cutoff - 1_200f32      ).abs() < 1e-10);
+    assert!((lpf.q - 1f32               ).abs() < 1e-10);
+    let w0      = 2f32 * PI * lpf.cutoff / lpf.sample_rate;
     let cos_w0  = w0.cos();
-    let alpha   = w0.sin() / (2f64 * lpf.q);
-    assert!(( 0.170_971_028_767f64 - w0            ).abs() < 1e-10);
-    assert!(( 0.985_420_021_355f64 - cos_w0        ).abs() < 1e-10);
-    assert!(( 0.085_069_650_158f64 - alpha         ).abs() < 1e-10);
-    assert!(( 0.006_718_452_886f64 - lpf.biquad.b0 ).abs() < 1e-10);
-    assert!(( 0.013_436_905_772f64 - lpf.biquad.b1 ).abs() < 1e-10);
-    assert!(( 0.006_718_452_886f64 - lpf.biquad.b2 ).abs() < 1e-10);
-    assert!((-1.816_325_839_012f64 - lpf.biquad.a1 ).abs() < 1e-10);
-    assert!(( 0.843_199_650_555f64 - lpf.biquad.a2 ).abs() < 1e-10);
+    let alpha   = w0.sin() / (2f32 * lpf.q);
+    assert!(( 0.170_971_028_767f32 - w0            ).abs() < 1e-10);
+    assert!(( 0.985_420_021_355f32 - cos_w0        ).abs() < 1e-10);
+    assert!(( 0.085_069_650_158f32 - alpha         ).abs() < 1e-10);
+    assert!(( 0.006_718_452_886f32 - lpf.biquad.b0 ).abs() < 1e-10);
+    assert!(( 0.013_436_905_772f32 - lpf.biquad.b1 ).abs() < 1e-10);
+    assert!(( 0.006_718_452_886f32 - lpf.biquad.b2 ).abs() < 1e-10);
+    assert!((-1.816_325_839_012f32 - lpf.biquad.a1 ).abs() < 1e-10);
+    assert!(( 0.843_199_650_555f32 - lpf.biquad.a2 ).abs() < 1e-10);
   }
 
   #[test]
   fn tick() {
-    let input = vec![0.5f64, 0.4f64, 0.3f64, 0.2f64, 0.1f64];
-    let mut lpf = Lowpass::new(44_100f64, 8_000f64, 0.71f64);
+    let input = vec![0.5f32, 0.4f32, 0.3f32, 0.2f32, 0.1f32];
+    let mut lpf = Lowpass::new(44_100f32, 8_000f32, 0.71f32);
     let expected =
       vec![
-        0.088_763_995_825f64,
-        0.293_767_078_666f64,
-        0.414_231_561_951f64,
-        0.359_573_380_268f64,
-        0.234_253_200_384f64
+        0.088_763_995_825f32,
+        0.293_767_078_666f32,
+        0.414_231_561_951f32,
+        0.359_573_380_268f32,
+        0.234_253_200_384f32
       ];
-    let mut actual: f64;
-    let mut abs_diff: f64;
+    let mut actual: f32;
+    let mut abs_diff: f32;
     for i in 0..input.len() {
       actual = lpf.tick(input[i]);
       abs_diff = (expected[i] - actual).abs();
@@ -198,18 +210,18 @@ mod tests {
 
   #[test]
   fn accessors() {
-    let mut filter = Lowpass::new(44_100f64, 8_000f64, 0.71f64);
-    filter.set_sample_rate(-2_000f64);
+    let mut filter = Lowpass::new(44_100f32, 8_000f32, 0.71f32);
+    filter.set_sample_rate(-2_000f32);
     assert_eq!(MIN_SAMPLE_RATE, filter.sample_rate());
-    filter.set_sample_rate(192_000f64);
-    assert_eq!(192_000f64, filter.sample_rate());
-    filter.set_cutoff(-20f64);
+    filter.set_sample_rate(192_000f32);
+    assert_eq!(192_000f32, filter.sample_rate());
+    filter.set_cutoff(-20f32);
     assert_eq!(MIN_FREQUENCY, filter.cutoff());
-    filter.set_cutoff(200_000f64);
-    assert_eq!(192_000f64 / 2f64, filter.cutoff());
-    filter.set_q(-10f64);
+    filter.set_cutoff(200_000f32);
+    assert_eq!(192_000f32 / 2f32, filter.cutoff());
+    filter.set_q(-10f32);
     assert_eq!(MIN_Q, filter.q());
-    filter.set_q(4f64);
-    assert_eq!(4f64, filter.q());
+    filter.set_q(4f32);
+    assert_eq!(4f32, filter.q());
   }
 }
