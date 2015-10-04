@@ -86,14 +86,14 @@ mod tests {
       ];
     let mut two_zero = TwoZero::new();
     for sample in input.iter() {
-      assert!((two_zero.tick(*sample) - sample).abs() < EPSILON);
+      assert!((two_zero.tick(*sample) - sample).abs() <= EPSILON);
     }
     two_zero.clear();
     two_zero.set_coefficients(0.9f32, -0.2, 1.3f32);
     for i in 0..input.len() {
       let output = two_zero.tick(input[i]);
-      println!("{:.12} - {:.12} = {:.12}", expected[i], output, expected[i] - output);
-      assert!((expected[i] - output).abs() < 1e-10);
+      println!("iteration {}: {:.12} - {:.12} = {:.12}", i, expected[i], output, expected[i] - output);
+      assert!((expected[i] - output).abs() <= EPSILON);
     }
   }
 }

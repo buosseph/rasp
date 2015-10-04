@@ -12,7 +12,7 @@ The design, and general usage, of this library is greatly influenced by [The Syn
     - [x] Add `DspComponent` to all components
   - [x] Change sample type to `f32`
   - [ ] Update documentation
-  - [ ] Update tests
+  - [x] Update tests
     - Most tests will fail now that sample type has been changed to `f32`
   - [ ] Add examples
     - [ ] One per `DspComponent`

@@ -1,10 +1,8 @@
 extern crate audio_dsp;
 
 #[test]
-#[allow(unused_variables, unused_assignments)]
 fn api() {
   use audio_dsp::DspComponent;
-  use audio_dsp::Filter;
 
   use audio_dsp::filter::Biquad;
   use audio_dsp::filter::Lowpass;

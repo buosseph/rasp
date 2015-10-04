@@ -136,7 +136,7 @@ impl Filter for Lowpass {
 #[cfg(test)]
 mod tests {
   use DspComponent;
-  use Filter;
+  use std::f32::EPSILON;
   use std::f32::consts::PI;
   use filter::biquad::{
     MIN_SAMPLE_RATE,
@@ -171,20 +171,20 @@ mod tests {
   #[test]
   fn new() {
     let lpf = Lowpass::new(44_100f32, 1_200f32, 1f32);
-    assert!((lpf.sample_rate - 44_100f32).abs() < 1e-10);
-    assert!((lpf.cutoff - 1_200f32      ).abs() < 1e-10);
-    assert!((lpf.q - 1f32               ).abs() < 1e-10);
+    assert!((lpf.sample_rate - 44_100f32).abs() <= EPSILON);
+    assert!((lpf.cutoff - 1_200f32      ).abs() <= EPSILON);
+    assert!((lpf.q - 1f32               ).abs() <= EPSILON);
     let w0      = 2f32 * PI * lpf.cutoff / lpf.sample_rate;
     let cos_w0  = w0.cos();
     let alpha   = w0.sin() / (2f32 * lpf.q);
-    assert!(( 0.170_971_028_767f32 - w0            ).abs() < 1e-10);
-    assert!(( 0.985_420_021_355f32 - cos_w0        ).abs() < 1e-10);
-    assert!(( 0.085_069_650_158f32 - alpha         ).abs() < 1e-10);
-    assert!(( 0.006_718_452_886f32 - lpf.biquad.b0 ).abs() < 1e-10);
-    assert!(( 0.013_436_905_772f32 - lpf.biquad.b1 ).abs() < 1e-10);
-    assert!(( 0.006_718_452_886f32 - lpf.biquad.b2 ).abs() < 1e-10);
-    assert!((-1.816_325_839_012f32 - lpf.biquad.a1 ).abs() < 1e-10);
-    assert!(( 0.843_199_650_555f32 - lpf.biquad.a2 ).abs() < 1e-10);
+    assert!(( 0.170_971_028_767f32 - w0            ).abs() <= EPSILON);
+    assert!(( 0.985_420_021_355f32 - cos_w0        ).abs() <= EPSILON);
+    assert!(( 0.085_069_650_158f32 - alpha         ).abs() <= EPSILON);
+    assert!(( 0.006_718_452_886f32 - lpf.biquad.b0 ).abs() <= EPSILON);
+    assert!(( 0.013_436_905_772f32 - lpf.biquad.b1 ).abs() <= EPSILON);
+    assert!(( 0.006_718_452_886f32 - lpf.biquad.b2 ).abs() <= EPSILON);
+    assert!((-1.816_325_839_012f32 - lpf.biquad.a1 ).abs() <= EPSILON);
+    assert!(( 0.843_199_650_555f32 - lpf.biquad.a2 ).abs() <= EPSILON);
   }
 
   #[test]
@@ -200,11 +200,9 @@ mod tests {
         0.234_253_200_384f32
       ];
     let mut actual: f32;
-    let mut abs_diff: f32;
     for i in 0..input.len() {
       actual = lpf.tick(input[i]);
-      abs_diff = (expected[i] - actual).abs();
-      assert!(abs_diff < 1e-10);
+      assert!((expected[i] - actual).abs() <= EPSILON);
     }
   }
 
