@@ -4,6 +4,8 @@ pub mod one_zero;
 pub mod two_pole;
 pub mod two_zero;
 
+pub mod delay;
+
 pub use self::biquad::Biquad as Biquad;
 pub use self::biquad::lowpass::Lowpass as Lowpass;
 pub use self::biquad::highpass::Highpass as Highpass;

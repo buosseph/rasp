@@ -1,3 +1,4 @@
+#![feature(vec_resize)]
 pub mod filter;
 
 pub use filter::Biquad;
@@ -36,4 +37,17 @@ pub trait Filter {
 
   /// Returns the last computed output sample.
   fn last_out(&self) -> f32;
+}
+
+/// A digital delay-line.
+///
+/// A delay-line stalls an input signal for some number of samples. Every
+/// delay-line has a maximum number of samples which it can buffer and may, or
+/// may not, interpolate samples depending on the implementation of the delay
+/// component.
+pub trait DelayLine {
+  fn set_delay_time();
+  fn get_delay_time();
+  fn set_max_delay_time();
+  fn get_max_delay_time();
 }
