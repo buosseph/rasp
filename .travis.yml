@@ -32,7 +32,7 @@ after_success:
 
 env:
   global:
-    - TRAVIS_CARGO_NIGHTLY_FEATURE=dev
+    - TRAVIS_CARGO_NIGHTLY_FEATURE=""
     - secure: EYIl6GRYimlWC6vpjmBmMbtWMv0rjIhv9mFgg3ODLdFxSTIip26ehbAE5P35sgVwChZITVqA/T4tgWxeBUmYPhXkAtpnLri43FAFwc89vX4yUKHKD0Lfiqj5uen+YDfWLPtcLfjo2ox+yRq6Qxy0EvFP5U7gYGOnDpQibCvhtL4=
 
 notifications:
