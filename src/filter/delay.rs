@@ -1,5 +1,4 @@
 use DspComponent;
-use Filter;
 
 /// A time-varying delay line.
 pub struct Delay {
@@ -20,18 +19,24 @@ impl Delay {
       panic!("delay must be less than or equal to max_delay");
     }
 
-    Delay {
-      memory: vec![0f32; max_delay + 1],
-      read_ptr: 0,
-      write_ptr: 0,
-      delay: delay
-    }
+    let mut delay_line =
+      Delay {
+        memory: vec![0f32; max_delay + 1],
+        read_ptr: 0,
+        write_ptr: 0,
+        delay: 0
+      };
+
+    delay_line.set_delay(delay);
+    delay_line
   }
 
   /// Set the maximum delay-line length, in samples.
   pub fn set_max_delay(&mut self, delay: usize) {
-    // if delay < self.memory.len() { return; }
-    self.memory.resize(delay + 1, 0f32);
+    if delay < self.memory.len() { return; }
+    else {
+      self.memory.resize(delay + 1, 0f32);
+    }
   }
 
   /// Returns the maximum delay-line lenght, in samples.
@@ -77,12 +82,12 @@ impl DspComponent for Delay {
     // write input sample into memory
     self.memory[self.write_ptr] = sample;
     self.write_ptr += 1;
-    self.write_ptr %= self.memory.len(); // Modulo or if write_ptr == self. memory.len() { write_ptr = 0; } ?
+    self.write_ptr %= self.memory.len();
 
     // read and return next sample in delay line
     let output = self.memory[self.read_ptr];
     self.read_ptr += 1;
-    self.read_ptr %= self.memory.len(); // Modulo or if read_ptr == self. memory.len() { read_ptr = 0; } ?
+    self.read_ptr %= self.memory.len();
     output
   }
 }
@@ -92,6 +97,21 @@ mod tests {
   use DspComponent;
   use std::f32::EPSILON;
   use super::*;
+
+  #[test]
+  fn new() {
+    let mut delay1 = Delay::new(0, 4095);
+    let delay2 = Delay::new(4, 4095);
+
+    assert_eq!(delay1.next_out(), 0f32);
+    assert_eq!(delay2.next_out(), 0f32);
+
+    assert!(delay1.get_delay() != delay2.get_delay());
+    assert_eq!(delay1.get_max_delay(), delay2.get_max_delay());
+
+    delay1.set_delay(4);
+    assert_eq!(delay1.get_delay(), delay2.get_delay());
+  }
 
   #[test]
   fn tick() {
@@ -104,11 +124,3 @@ mod tests {
     }
   }
 }
-
-
-
-
-
-
-
-

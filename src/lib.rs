@@ -1,4 +1,3 @@
-#![feature(vec_resize)]
 pub mod filter;
 
 pub use filter::Biquad;
