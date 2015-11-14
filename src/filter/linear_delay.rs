@@ -121,6 +121,26 @@ impl LinearDelay {
 
     output
   }
+
+  /// Returns the value at `tap_delay` samples from the current delay-line
+  /// input.
+  pub fn tap_out(&self, tap_delay: usize) -> f32 {
+    let mut tap: isize = self.write_ptr as isize - tap_delay as isize - 1;
+    if tap < 0 {
+      tap += self.memory.len() as isize;
+    }
+    self.memory[tap as usize]
+  }
+
+  /// Sets the value at `tap_delay` samples from the current delay-line
+  /// input.
+  pub fn tap_in(&mut self, value: f32, tap_delay: usize) {
+    let mut tap: isize = self.write_ptr as isize - tap_delay as isize - 1;
+    if tap < 0 {
+      tap += self.memory.len() as isize;
+    }
+    self.memory[tap as usize] = value;
+  }
 }
 
 #[cfg(test)]
@@ -163,6 +183,39 @@ mod tests {
 
     for (i, sample) in input.iter().enumerate() {
       assert!((expected[i] - delay2.tick(*sample)).abs() < EPSILON);
+    }
+  }
+
+  #[test]
+  fn tap_out() {
+    // NOTE: More test cases should be added
+    let input     = vec![0f32, 0.25f32, 0.5f32, 0.75f32];
+    let expected  = vec![0.75f32, 0.5f32, 0.25f32, 0f32];
+    let mut delay = LinearDelay::new(4f32, 4095);
+
+    for sample in input.iter() {
+      delay.tick(*sample);
+      assert_eq!(*sample, delay.tap_out(0));
+    }
+
+    for (i, sample) in expected.iter().enumerate() {
+      assert_eq!(*sample, delay.tap_out(i));
+    }
+  }
+
+  #[test]
+  fn tap_in() {
+    // NOTE: More test cases should be added
+    let input     = vec![0f32, 0.25f32, 0.5f32, 0.75f32];
+    let expected  = vec![0.75f32, 0.5f32, 0.25f32, 0f32];
+    let mut delay = LinearDelay::new(4f32, 4095);
+
+    for (i, sample) in input.iter().enumerate() {
+      delay.tap_in(*sample, i);
+    }
+
+    for sample in expected.iter() {
+      assert_eq!(*sample, delay.tick(0f32));
     }
   }
 

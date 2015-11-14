@@ -13,10 +13,12 @@ pub struct Delay {
 impl Delay {
   /// Create a delay line.
   ///
-  /// Both `delay` and `max_delay` are represented in samples.
+  /// Both `delay` and `max_delay` are represented in samples. The `delay`
+  /// value will be clipped if it is greater than `max_delay`.
   pub fn new(delay: usize, max_delay: usize) -> Delay {
-    if delay > max_delay {
-      panic!("delay must be less than or equal to max_delay");
+    let mut num_samples = delay;
+    if num_samples > max_delay {
+      num_samples = max_delay;
     }
 
     let mut delay_line =
@@ -27,7 +29,7 @@ impl Delay {
         delay: 0
       };
 
-    delay_line.set_delay(delay);
+    delay_line.set_delay(num_samples);
     delay_line
   }
 
@@ -45,19 +47,22 @@ impl Delay {
   }
 
   /// Set the current delay-line length, in samples.
+  ///
+  /// The `delay` value will be clipped if it is greater than `max_delay`.
   pub fn set_delay(&mut self, delay: usize) {
-    if delay > self.memory.len() - 1 {
-      panic!("delay must be less than or equal to max_delay");
+    let mut num_samples = delay;
+    if num_samples > self.memory.len() - 1 {
+      num_samples = self.memory.len() - 1;
     }
 
-    if self.write_ptr >= delay {
-      self.read_ptr = self.write_ptr - delay;
+    if self.write_ptr >= num_samples {
+      self.read_ptr = self.write_ptr - num_samples;
     }
     else {
-      self.read_ptr = self.memory.len() + self.write_ptr - delay;
+      self.read_ptr = self.memory.len() + self.write_ptr - num_samples;
     }
 
-    self.delay = delay;
+    self.delay = num_samples;
   }
 
   /// Returns the current delay-line length, in samples.
@@ -68,6 +73,38 @@ impl Delay {
   /// Returns the value that will be output by the next call to `tick()`.
   pub fn next_out(&self) -> f32 {
     self.memory[self.read_ptr]
+  }
+
+  /// Returns the value at `tap_delay` samples from the current delay-line
+  /// input.
+  pub fn tap_out(&self, tap_delay: usize) -> f32 {
+    let mut tap: isize = self.write_ptr as isize - tap_delay as isize - 1;
+    if tap < 0 {
+      tap += self.memory.len() as isize;
+    }
+    self.memory[tap as usize]
+  }
+
+  /// Sets the value at `tap_delay` samples from the current delay-line
+  /// input.
+  pub fn tap_in(&mut self, value: f32, tap_delay: usize) {
+    let mut tap: isize = self.write_ptr as isize - tap_delay as isize - 1;
+    if tap < 0 {
+      tap += self.memory.len() as isize;
+    }
+    self.memory[tap as usize] = value;
+  }
+
+  // NOTE: Do not copy this to `LinearDelay`
+  /// Adds to the value at `tap_delay` samples from the current delay-line
+  /// input.
+  pub fn add_to(&mut self, value: f32, tap_delay: usize) -> f32 {
+    let mut tap: isize = self.write_ptr as isize - tap_delay as isize - 1;
+    if tap < 0 {
+      tap += self.memory.len() as isize;
+    }
+    self.memory[tap as usize] += value;
+    self.memory[tap as usize]
   }
 }
 
@@ -121,6 +158,55 @@ mod tests {
 
     for (i, sample) in input.iter().enumerate() {
       assert!((expected[i] - delay.tick(*sample)).abs() < EPSILON);
+    }
+  }
+
+  #[test]
+  fn tap_out() {
+    // NOTE: More test cases should be added
+    let input     = vec![0f32, 0.25f32, 0.5f32, 0.75f32];
+    let expected  = vec![0.75f32, 0.5f32, 0.25f32, 0f32];
+    let mut delay = Delay::new(4, 4095);
+
+    for sample in input.iter() {
+      delay.tick(*sample);
+      assert_eq!(*sample, delay.tap_out(0));
+    }
+
+    for (i, sample) in expected.iter().enumerate() {
+      assert_eq!(*sample, delay.tap_out(i));
+    }
+  }
+
+  #[test]
+  fn tap_in() {
+    // NOTE: More test cases should be added
+    let input     = vec![0f32, 0.25f32, 0.5f32, 0.75f32];
+    let expected  = vec![0.75f32, 0.5f32, 0.25f32, 0f32];
+    let mut delay = Delay::new(4, 4095);
+
+    for (i, sample) in input.iter().enumerate() {
+      delay.tap_in(*sample, i);
+    }
+
+    for sample in expected.iter() {
+      assert_eq!(*sample, delay.tick(0f32));
+    }
+  }
+
+  #[test]
+  fn add_to() {
+    // NOTE: More test cases should be added
+    let input     = vec![0f32, 0.25f32, 0.5f32, 0.75f32];
+    let expected  = vec![0.75f32, 0.5f32, 0.25f32, 0f32];
+    let mut delay = Delay::new(4, 4095);
+
+    for (i, sample) in input.iter().enumerate() {
+      delay.add_to(*sample, i);
+    }
+
+    for sample in expected.iter() {
+      assert_eq!(*sample, delay.tick(0f32));
     }
   }
 }
