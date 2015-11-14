@@ -14,9 +14,9 @@ impl Delay {
   /// Both `delay` and `max_delay` are represented in samples. The `delay`
   /// value will be clipped if it is greater than `max_delay`.
   pub fn new(delay: usize, max_delay: usize) -> Delay {
-    let mut num_samples = delay;
-    if num_samples > max_delay {
-      num_samples = max_delay;
+    let mut delay_time = delay;
+    if delay_time > max_delay {
+      delay_time = max_delay;
     }
 
     let mut delay_line =
@@ -27,7 +27,7 @@ impl Delay {
         delay: 0
       };
 
-    delay_line.set_delay(num_samples);
+    delay_line.set_delay(delay_time);
     delay_line
   }
 
@@ -48,19 +48,20 @@ impl Delay {
   ///
   /// The `delay` value will be clipped if it is greater than `max_delay`.
   pub fn set_delay(&mut self, delay: usize) {
-    let mut num_samples = delay;
-    if num_samples > self.memory.len() - 1 {
-      num_samples = self.memory.len() - 1;
+    let mut delay_time = delay;
+    let max_delay_samples = self.memory.len() - 1;
+    if delay_time > max_delay_samples {
+      delay_time = max_delay_samples;
     }
 
-    if self.write_ptr >= num_samples {
-      self.read_ptr = self.write_ptr - num_samples;
+    if self.write_ptr >= delay_time {
+      self.read_ptr = self.write_ptr - delay_time;
     }
     else {
-      self.read_ptr = self.memory.len() + self.write_ptr - num_samples;
+      self.read_ptr = self.memory.len() + self.write_ptr - delay_time;
     }
 
-    self.delay = num_samples;
+    self.delay = delay_time;
   }
 
   /// Returns the current delay-line length, in samples.

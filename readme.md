@@ -1,5 +1,6 @@
 # audio-dsp
 [![Build Status](https://travis-ci.org/brianuosseph/audio-dsp.svg)](https://travis-ci.org/brianuosseph/audio-dsp)
+[![Coverage Status](https://coveralls.io/repos/brianuosseph/audio-dsp/badge.svg?branch=master&service=github)](https://coveralls.io/github/brianuosseph/audio-dsp?branch=master)
 
 This library contains a number of common components used in digital signal processing applications.
 

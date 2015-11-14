@@ -16,14 +16,15 @@ pub struct LinearDelay {
 impl LinearDelay {
   /// Creates a delay line.
   ///
-  /// Both `delay` and `max_delay` are represented in samples.
+  /// Both `delay` and `max_delay` are represented in samples. The `delay`
+  /// value will be clipped if it is greater than `max_delay`.
   pub fn new(delay: f32, max_delay: usize) -> LinearDelay {
-    if delay as usize > max_delay {
-      panic!("delay must be less than or equal to max_delay");
+    let mut delay_time = delay;
+    if delay_time > max_delay as f32 {
+      delay_time = max_delay as f32;
     }
-
-    if delay < 0f32 {
-      panic!("delay must be greater than zero");
+    if delay_time < 0f32 {
+      delay_time = 0f32;
     }
 
     let mut delay_line =
@@ -38,7 +39,7 @@ impl LinearDelay {
         om_alpha: 0f32
       };
 
-    delay_line.set_delay(delay);
+    delay_line.set_delay(delay_time);
     delay_line
   }
 
@@ -54,17 +55,20 @@ impl LinearDelay {
   }
 
   /// Set the current delay-line length, in samples.
+  ///
+  /// The `delay` value will be clipped if it is greater than `max_delay`.
   pub fn set_delay(&mut self, delay: f32) {
-    if delay as usize > self.memory.len() - 1 {
-      panic!("delay must be less than or equal to max_delay");
+    let mut delay_time = delay;
+    let max_delay_samples = (self.memory.len() - 1) as f32;
+    if delay_time > max_delay_samples {
+      delay_time = max_delay_samples;
+    }
+    if delay_time < 0f32 {
+      delay_time = 0f32;
     }
 
-    if delay < 0f32 {
-      panic!("delay must be greater than zero");
-    }
-
-    let mut read_ptr_integer: f32 = self.write_ptr as f32 - delay;
-    self.delay = delay;
+    let mut read_ptr_integer: f32 = self.write_ptr as f32 - delay_time;
+    self.delay = delay_time;
 
     while read_ptr_integer < 0f32 {
       read_ptr_integer += self.memory.len() as f32;
