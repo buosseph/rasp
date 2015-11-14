@@ -1,13 +1,13 @@
 // Use this to set up an example of a one-pole lowpass and highpass
 // http://www.earlevel.com/main/2012/12/15/a-one-pole-filter/
-use DspComponent;
-use Filter;
 
-/// Single channel, one pole digital filter.
+/// A single channel, one pole digital filter.
 ///
-/// A `OnePole` is a type of `Filter` that uses the following equation:
-/// > y[n] = b0*x[n] - a1*y[n-1]
-/// It only has one feedback coefficient `a1`. 
+/// A `OnePole` filter uses the following equation:
+///
+/// `y[n] = b0*x[n] - a1*y[n-1]`
+///
+/// It has one feedback coefficient, `a1`. 
 pub struct OnePole {
   y_z1: f32,
   pub b0: f32,
@@ -15,17 +15,11 @@ pub struct OnePole {
 }
 
 impl OnePole {
-  /// Sets all filter coefficients at once.
+  /// Creates a new `OnePole` filter.
   ///
-  /// `a1` is a feedback, or pole.
-  pub fn set_coefficients(&mut self, b0: f32, a1: f32) {
-    self.b0 = b0;
-    self.a1 = a1;
-  }
-}
-
-impl DspComponent for OnePole {
-  fn new() -> OnePole {
+  /// The filter will be initalized in a state that does not alter the input
+  /// signal.
+  pub fn new() -> OnePole {
     OnePole {
       y_z1: 0f32,
       b0: 1f32,
@@ -33,27 +27,35 @@ impl DspComponent for OnePole {
     }
   }
 
-  fn tick(&mut self, sample: f32) -> f32 {
+  /// Sets all filter coefficients at once.
+  ///
+  /// `a1` is a feedback, or pole.
+  pub fn set_coefficients(&mut self, b0: f32, a1: f32) {
+    self.b0 = b0;
+    self.a1 = a1;
+  }
+
+  /// Processes and stores input sample into memory and outputs calculated
+  /// sample.
+  pub fn tick(&mut self, sample: f32) -> f32 {
     let output = self.b0 * sample - self.a1 * self.y_z1;
     self.y_z1 = output;
     output
   }
-}
 
-impl Filter for OnePole {
-  fn clear(&mut self) {
+  /// Resets memory of all previous input and output to zero.
+  pub fn clear(&mut self) {
     self.y_z1 = 0f32;
   }
 
-  fn last_out(&self) -> f32 {
+  /// Returns the last computed output sample.
+  pub fn last_out(&self) -> f32 {
     self.y_z1
   }
 }
 
 #[cfg(test)]
 mod tests {
-  use DspComponent;
-  use Filter;
   use std::f32::EPSILON;
   use super::*;
 

@@ -1,5 +1,3 @@
-use DspComponent;
-
 /// A time-varying delay line.
 pub struct Delay {
   memory: Vec<f32>,
@@ -11,7 +9,7 @@ pub struct Delay {
 }
 
 impl Delay {
-  /// Create a delay line.
+  /// Creates a delay line.
   ///
   /// Both `delay` and `max_delay` are represented in samples. The `delay`
   /// value will be clipped if it is greater than `max_delay`.
@@ -75,6 +73,21 @@ impl Delay {
     self.memory[self.read_ptr]
   }
 
+  /// Processes and stores input sample into memory and outputs calculated
+  /// sample.
+  pub fn tick(&mut self, sample: f32) -> f32 {
+    // write input sample into memory
+    self.memory[self.write_ptr] = sample;
+    self.write_ptr += 1;
+    self.write_ptr %= self.memory.len();
+
+    // read and return next sample in delay line
+    let output = self.memory[self.read_ptr];
+    self.read_ptr += 1;
+    self.read_ptr %= self.memory.len();
+    output
+  }
+
   /// Returns the value at `tap_delay` samples from the current delay-line
   /// input.
   pub fn tap_out(&self, tap_delay: usize) -> f32 {
@@ -95,7 +108,6 @@ impl Delay {
     self.memory[tap as usize] = value;
   }
 
-  // NOTE: Do not copy this to `LinearDelay`
   /// Adds to the value at `tap_delay` samples from the current delay-line
   /// input.
   pub fn add_to(&mut self, value: f32, tap_delay: usize) -> f32 {
@@ -108,30 +120,8 @@ impl Delay {
   }
 }
 
-impl DspComponent for Delay {
-  /// Creates a new `Delay` with a delay-time of zero and a maximum delay of
-  /// 4095 samples.
-  fn new() -> Delay {
-    Delay::new(0, 4095)
-  }
-
-  fn tick(&mut self, sample: f32) -> f32 {
-    // write input sample into memory
-    self.memory[self.write_ptr] = sample;
-    self.write_ptr += 1;
-    self.write_ptr %= self.memory.len();
-
-    // read and return next sample in delay line
-    let output = self.memory[self.read_ptr];
-    self.read_ptr += 1;
-    self.read_ptr %= self.memory.len();
-    output
-  }
-}
-
 #[cfg(test)]
 mod tests {
-  use DspComponent;
   use std::f32::EPSILON;
   use super::*;
 

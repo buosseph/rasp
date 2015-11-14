@@ -4,7 +4,6 @@ extern crate audio_dsp;
 mod api {
   #[cfg(test)]
   mod filter {
-    use audio_dsp::DspComponent;
     use audio_dsp::filter::{
       OnePole,
       OneZero,
@@ -60,7 +59,6 @@ mod api {
 
     #[cfg(test)]
     mod biquad {
-      use audio_dsp::DspComponent;
       use audio_dsp::filter::Biquad;
       use audio_dsp::filter::biquad::{
         Lowpass,
@@ -92,8 +90,6 @@ mod api {
 #[allow(unused_imports)]
 fn exports() {
   // Test all top-level exports for users
-  use audio_dsp::DspComponent;
-
   use audio_dsp::filter::Delay;
   use audio_dsp::filter::LinearDelay;
 

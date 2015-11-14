@@ -1,32 +1,33 @@
-//! Biquads are a popular choice for implementing common audio filters.
-
+//! Biquad filters.
 mod lowpass;
 mod highpass;
 
 pub use self::lowpass::Lowpass as Lowpass;
 pub use self::highpass::Highpass as Highpass;
 
-use DspComponent;
-use Filter;
 use std::f32::MIN_POSITIVE;
 
-// Used in common filter implementations
-const MIN_SAMPLE_RATE: f32 = MIN_POSITIVE;
+// Cutoff frequency must be non-negative
 const MIN_FREQUENCY: f32 = 0f32;
-const MIN_Q: f32 = MIN_POSITIVE;
 
-/// Single channel, second-order filter.
+// Sample rate and Q must be non-zero
+const MIN_Q: f32 = MIN_POSITIVE;
+const MIN_SAMPLE_RATE: f32 = MIN_POSITIVE;
+
+/// A single channel, second-order filter.
 ///
-/// A `Biquad` is a type of second-order `Filter` that uses the following
+/// A `Biquad` is a type of second-order filter that uses the following
 /// equation:
 ///
-/// > y[n] = b0*x[n] + b1*x[n-1] + b2*x[n-2] - a1*y[n-1] - a2*y[n-2]
+/// `y[n] = b0*x[n] + b1*x[n-1] + b2*x[n-2] - a1*y[n-1] - a2*y[n-2]`
 ///
-/// It has two feedforward coefficients `b1` and `b2`, and two feedback
-/// coefficients `a1` and `a2`.
+/// It has two feedforward coefficients, `b1` and `b2`, and two feedback
+/// coefficients, `a1` and `a2`.
 pub struct Biquad {
-  x_z1: f32, x_z2: f32,
-  y_z1: f32, y_z2: f32,
+  x_z1: f32,
+  x_z2: f32,
+  y_z1: f32,
+  y_z2: f32,
   pub b0: f32,
   pub b1: f32,
   pub b2: f32,
@@ -35,6 +36,18 @@ pub struct Biquad {
 }
 
 impl Biquad {
+  /// Creates a new `Biquad` filter.
+  ///
+  /// The filter will be initalized in a state that does not alter the input
+  /// signal.
+  pub fn new() -> Biquad {
+    Biquad {
+      x_z1: 0f32, x_z2: 0f32,
+      y_z1: 0f32, y_z2: 0f32,
+      b0: 1f32, b1: 0f32, b2: 0f32, a1: 0f32, a2: 0f32
+    }
+  }
+
   /// Sets all filter coefficients at once.
   ///
   /// `b1`, `b2` are feedforwards, or zeroes, and `a1`, `a2` are feedbacks,
@@ -43,18 +56,10 @@ impl Biquad {
     self.b0 = b0; self.b1 = b1; self.b2 = b2;
     self.a1 = a1; self.a2 = a2;
   }
-}
 
-impl DspComponent for Biquad {
-  fn new() -> Biquad {
-    Biquad {
-      x_z1: 0f32, x_z2: 0f32,
-      y_z1: 0f32, y_z2: 0f32,
-      b0: 1f32, b1: 0f32, b2: 0f32, a1: 0f32, a2: 0f32
-    }
-  }
-
-  fn tick(&mut self, sample: f32) -> f32 {
+  /// Processes and stores input sample into memory and outputs calculated
+  /// sample.
+  pub fn tick(&mut self, sample: f32) -> f32 {
     let output = self.b0 * sample
       + self.b1 * self.x_z1 + self.b2 * self.x_z2
       - self.a1 * self.y_z1 - self.a2 * self.y_z2;
@@ -62,23 +67,21 @@ impl DspComponent for Biquad {
     self.y_z2 = self.y_z1; self.y_z1 = output;
     output
   }
-}
 
-impl Filter for Biquad {
-  fn clear(&mut self) {
+  /// Resets memory of all previous input and output to zero.
+  pub fn clear(&mut self) {
     self.x_z1 = 0f32; self.x_z2 = 0f32;
     self.y_z1 = 0f32; self.y_z2 = 0f32;
   }
 
-  fn last_out(&self) -> f32 {
+  /// Returns the last computed output sample.
+  pub fn last_out(&self) -> f32 {
     self.y_z1
   }
 }
 
 #[cfg(test)]
 mod tests {
-  use DspComponent;
-  use Filter;
   use std::f32::EPSILON;
   use super::*;
 

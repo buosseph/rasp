@@ -1,14 +1,12 @@
-use DspComponent;
-use Filter;
 use std::f32::consts::PI;
 use filter::biquad::Biquad;
 use filter::biquad::{
-  MIN_SAMPLE_RATE,
   MIN_FREQUENCY,
-  MIN_Q
+  MIN_Q,
+  MIN_SAMPLE_RATE
 };
 
-/// Highpass biquad filter.
+/// A highpass biquad filter.
 pub struct Highpass {
   sample_rate: f32,
   cutoff: f32,
@@ -17,10 +15,9 @@ pub struct Highpass {
 }
 
 impl Highpass {
-  /// Constructs a new `Highpass`.
+  /// Creates a new `Highpass` biquad filter.
   ///
-  /// Unlike a `Biquad`, the coefficients
-  /// are immediately calculated.
+  /// The filter coefficients are immediately calculated.
   pub fn new(sample_rate: f32, cutoff: f32, q: f32) -> Self {
     let mut hpf =
       Highpass {
@@ -33,67 +30,10 @@ impl Highpass {
     hpf
   }
 
-  /// Sets the filter sample rate.
-  ///
-  /// Highpass filters require knowledge
-  /// of the sample rate of the audio
-  /// input in order to calculate
-  /// the correct coefficients.
-  ///
-  /// The sample rate must be a positive non-zero value.
-  /// If not, the value is clipped.
-  pub fn set_sample_rate(&mut self, new_sample_rate: f32) {
-    let mut fs = new_sample_rate;
-    if fs < MIN_SAMPLE_RATE {
-      fs = MIN_SAMPLE_RATE;
-    }
-    self.sample_rate = fs;
-    self.update_coefficients();
-  }
-
-  /// Sets the filter frequency cutoff.
-  ///
-  /// The frequency must satisfy `0 Hz <= cutoff <= Fs/2`
-  /// where `Fs/2` is the Nyquist frequency, or 
-  /// half the sample rate of the input audio.
-  /// If not, the value will be clipped.
-  pub fn set_cutoff(&mut self, new_cutoff: f32) {
-    let mut fc = new_cutoff;
-    if fc < MIN_FREQUENCY {
-      fc = MIN_FREQUENCY;
-    }
-    if fc > self.sample_rate / 2f32 {
-      fc = self.sample_rate / 2f32;
-    }
-    self.cutoff = fc;
-    self.update_coefficients();
-  }
-
-  /// Sets the filter Q value.
-  ///
-  /// The Q value must be a positive non-zero value.
-  /// If not, the value is clipped.
-  pub fn set_q(&mut self, new_q: f32) {
-    let mut _q = new_q;
-    if _q < MIN_Q { _q = MIN_Q; }
-    self.q = _q;
-    self.update_coefficients();
-  }
-
-  /// Returns the sample rate of the audio
-  /// passed through the filter.
-  pub fn sample_rate(&self) -> f32 { self.sample_rate }
-
-  /// Returns the frequency cutoff of the filter.
-  pub fn cutoff(&self) -> f32 { self.cutoff }
-
-  /// Returns the Q value of the filter.
-  pub fn q(&self) -> f32 { self.q }
-
   /// Updates `Biquad` coefficients.
   ///
-  /// `Biquad` coefficients are calculated
-  /// from the `sample_rate`, `cutoff`, and `q`.
+  /// `Biquad` coefficients are calculated from the `sample_rate`, `cutoff`,
+  /// and `q` factor.
   fn update_coefficients(&mut self) {
     let w0 = 2f32 * PI * self.cutoff / self.sample_rate;
     let cos_w0  = w0.cos();
@@ -111,31 +51,80 @@ impl Highpass {
     a2 /= a0;
     self.biquad.set_coefficients(b0, b1, b2, a1, a2);
   }
-}
 
-impl DspComponent for Highpass {
-  fn new() -> Highpass {
-    Highpass::new(44_100f32, 20_000f32, 0.71)
+  /// Sets the filter sample rate, in Hertz.
+  ///
+  /// This filter requires the sample rate of the audio input in order to
+  /// calculate the correct feedback and feedforward coefficients.
+  ///
+  /// The `sample_rate` value will be clipped if it is not a positive, non-zero
+  /// value.
+  pub fn set_sample_rate(&mut self, sample_rate: f32) {
+    let mut fs = sample_rate;
+    if fs < MIN_SAMPLE_RATE {
+      fs = MIN_SAMPLE_RATE;
+    }
+    self.sample_rate = fs;
+    self.update_coefficients();
   }
 
-  fn tick(&mut self, sample: f32) -> f32 {
+  /// Sets the filter frequency cutoff, in Hertz.
+  ///
+  /// The frequency must satisfy `0 <= cutoff <= Fs/2` where `Fs/2` is the
+  /// Nyquist frequency, or half the sample rate of the input audio.
+  ///
+  /// The `cutoff` value will be clipped if it is a negative value, or if it is
+  /// greater than the half the sample rate.
+  pub fn set_cutoff(&mut self, cutoff: f32) {
+    let mut fc = cutoff;
+    if fc < MIN_FREQUENCY {
+      fc = MIN_FREQUENCY;
+    }
+    if fc > self.sample_rate / 2f32 {
+      fc = self.sample_rate / 2f32;
+    }
+    self.cutoff = fc;
+    self.update_coefficients();
+  }
+
+  /// Sets the filter Q factor.
+  ///
+  /// The `q` value will be clipped if it is not a positive, non-zero value.
+  pub fn set_q(&mut self, q: f32) {
+    let mut _q = q;
+    if _q < MIN_Q { _q = MIN_Q; }
+    self.q = _q;
+    self.update_coefficients();
+  }
+
+  /// Returns the sample rate of the audio passed through the filter, in Hertz.
+  pub fn sample_rate(&self) -> f32 { self.sample_rate }
+
+  /// Returns the frequency cutoff of the filter, in Hertz.
+  pub fn cutoff(&self) -> f32 { self.cutoff }
+
+  /// Returns the Q value of the filter.
+  pub fn q(&self) -> f32 { self.q }
+
+  /// Processes and stores input sample into memory and outputs calculated
+  /// sample.
+  pub fn tick(&mut self, sample: f32) -> f32 {
     self.biquad.tick(sample)
   }
-}
 
-impl Filter for Highpass {
-  fn clear(&mut self) {
+  /// Resets memory of all previous input and output to zero.
+  pub fn clear(&mut self) {
     self.biquad.clear();
   }
 
-  fn last_out(&self) -> f32 {
+  /// Returns the last computed output sample.
+  pub fn last_out(&self) -> f32 {
     self.biquad.last_out()
   }
 }
 
 #[cfg(test)]
 mod tests {
-  use DspComponent;
   use std::f32::EPSILON;
   use std::f32::consts::PI;
   use filter::biquad::{

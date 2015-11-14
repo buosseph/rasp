@@ -1,32 +1,25 @@
-use DspComponent;
-use Filter;
-
-/// Single channel, two zero digital filter.
+/// A single channel, two zero digital filter.
 ///
-/// A `TwoZero` is a type of `Filter` that uses the following equation:
-/// > y[n] = b0*x[n] + b1*x[n-1] + b2*x[n-2]
-/// It has two feedforward coefficients `b1` and `b2`. 
+/// A `TwoZero` filter uses the following equation:
+///
+/// `y[n] = b0*x[n] + b1*x[n-1] + b2*x[n-2]`
+///
+/// It has two feedforward coefficients, `b1` and `b2`.
 pub struct TwoZero {
   x_z1: f32,
   x_z2: f32,
-  // Only necessary for last_out()
-  y_z1: f32,
+  y_z1: f32,    // Only necessary for last_out()
   pub b0: f32,
   pub b1: f32,
   pub b2: f32
 }
 
 impl TwoZero {
-  /// Sets all filter coefficients at once.
+  /// Creates a new `TwoZero` filter.
   ///
-  /// `b1` and `b2` are feedforwards, or zeroes.
-  pub fn set_coefficients(&mut self, b0: f32, b1: f32, b2: f32) {
-    self.b0 = b0; self.b1 = b1; self.b2 = b2;
-  }
-}
-
-impl DspComponent for TwoZero {
-  fn new() -> TwoZero {
+  /// The filter will be initalized in a state that does not alter the input
+  /// signal.
+  pub fn new() -> TwoZero {
     TwoZero {
       x_z1: 0f32, x_z2: 0f32,
       y_z1: 0f32,
@@ -34,29 +27,36 @@ impl DspComponent for TwoZero {
     }
   }
 
-  fn tick(&mut self, sample: f32) -> f32 {
+  /// Sets all filter coefficients at once.
+  ///
+  /// `b1` and `b2` are feedforwards, or zeroes.
+  pub fn set_coefficients(&mut self, b0: f32, b1: f32, b2: f32) {
+    self.b0 = b0; self.b1 = b1; self.b2 = b2;
+  }
+
+  /// Processes and stores input sample into memory and outputs calculated
+  /// sample.
+  pub fn tick(&mut self, sample: f32) -> f32 {
     self.y_z1 = self.b0 * sample
       + self.b1 * self.x_z1 + self.b2 * self.x_z2;
     self.x_z2 = self.x_z1;
     self.x_z1 = sample;
     self.y_z1
   }
-}
 
-impl Filter for TwoZero {
-  fn clear(&mut self) {
+  /// Resets memory of all previous input and output to zero.
+  pub fn clear(&mut self) {
     self.x_z1 = 0f32; self.x_z2 = 0f32;
   }
 
-  fn last_out(&self) -> f32 {
+  /// Returns the last computed output sample.
+  pub fn last_out(&self) -> f32 {
     self.y_z1
   }
 }
 
 #[cfg(test)]
 mod tests {
-  use DspComponent;
-  use Filter;
   use std::f32::EPSILON;
   use super::*;
 

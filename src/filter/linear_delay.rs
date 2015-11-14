@@ -14,7 +14,7 @@ pub struct LinearDelay {
 }
 
 impl LinearDelay {
-  /// Create a delay line.
+  /// Creates a delay line.
   ///
   /// Both `delay` and `max_delay` are represented in samples.
   pub fn new(delay: f32, max_delay: usize) -> LinearDelay {
@@ -105,6 +105,8 @@ impl LinearDelay {
     return self.next_out;
   }
 
+  /// Processes and stores input sample into memory and outputs calculated
+  /// sample.
   pub fn tick(&mut self, sample: f32) -> f32 {
     // write input sample into memory
     self.memory[self.write_ptr] = sample;
