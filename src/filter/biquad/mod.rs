@@ -1,7 +1,10 @@
 //! Biquads are a popular choice for implementing common audio filters.
 
-pub mod lowpass;
-pub mod highpass;
+mod lowpass;
+mod highpass;
+
+pub use self::lowpass::Lowpass as Lowpass;
+pub use self::highpass::Highpass as Highpass;
 
 use DspComponent;
 use Filter;

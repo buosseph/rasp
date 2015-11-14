@@ -1,14 +1,5 @@
 pub mod filter;
 
-pub use filter::Biquad;
-pub use filter::Lowpass;
-pub use filter::Highpass;
-
-pub use filter::OnePole;
-pub use filter::OneZero;
-pub use filter::TwoPole;
-pub use filter::TwoZero;
-
 /// A DSP component.
 ///
 /// This contains the base functions common in all components implemented in
