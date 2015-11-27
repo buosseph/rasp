@@ -1,10 +1,10 @@
-extern crate audio_dsp;
+extern crate rasp;
 
 #[cfg(test)]
 mod api {
   #[cfg(test)]
   mod filter {
-    use audio_dsp::filter::{
+    use rasp::filter::{
       OnePole,
       OneZero,
       TwoPole,
@@ -59,8 +59,8 @@ mod api {
 
     #[cfg(test)]
     mod biquad {
-      use audio_dsp::filter::Biquad;
-      use audio_dsp::filter::biquad::{
+      use rasp::filter::Biquad;
+      use rasp::filter::biquad::{
         Lowpass,
         Highpass
       };
@@ -90,17 +90,17 @@ mod api {
 #[allow(unused_imports)]
 fn exports() {
   // Test all top-level exports for users
-  use audio_dsp::filter::Delay;
-  use audio_dsp::filter::LinearDelay;
+  use rasp::filter::Delay;
+  use rasp::filter::LinearDelay;
 
-  use audio_dsp::filter::OnePole;
-  use audio_dsp::filter::OneZero;
-  use audio_dsp::filter::TwoPole;
-  use audio_dsp::filter::TwoZero;
+  use rasp::filter::OnePole;
+  use rasp::filter::OneZero;
+  use rasp::filter::TwoPole;
+  use rasp::filter::TwoZero;
 
-  use audio_dsp::filter::Biquad;
-  use audio_dsp::filter::biquad::Lowpass;
-  use audio_dsp::filter::biquad::Highpass;
+  use rasp::filter::Biquad;
+  use rasp::filter::biquad::Lowpass;
+  use rasp::filter::biquad::Highpass;
 
   assert!(true);
 }
@@ -110,7 +110,7 @@ fn exports() {
 fn explicit_exports() {
   // Test all explicity exports to components
   // (biquad::Biquad is currently the only one)
-  use audio_dsp::filter::biquad::Biquad;
+  use rasp::filter::biquad::Biquad;
 
   assert!(true);
 }
