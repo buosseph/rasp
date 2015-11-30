@@ -1,19 +1,3 @@
-//! Biquad filters.
-mod lowpass;
-mod highpass;
-
-pub use self::lowpass::Lowpass as Lowpass;
-pub use self::highpass::Highpass as Highpass;
-
-use std::f32::MIN_POSITIVE;
-
-// Cutoff frequency must be non-negative
-const MIN_FREQUENCY: f32 = 0f32;
-
-// Sample rate and Q must be non-zero
-const MIN_Q: f32 = MIN_POSITIVE;
-const MIN_SAMPLE_RATE: f32 = MIN_POSITIVE;
-
 /// A single channel, second-order filter.
 ///
 /// A `Biquad` is a type of second-order filter that uses the following

@@ -9,6 +9,7 @@ mod api {
       OneZero,
       TwoPole,
       TwoZero,
+      Biquad,
       Delay,
       LinearDelay
     };
@@ -57,30 +58,29 @@ mod api {
       assert_eq!(1f32, two_zero.tick(1f32));
     }
 
+    #[test]
+    fn biquad() {
+      let mut biquad  = Biquad::new();
+      assert_eq!(0f32, biquad.tick(0f32));
+    }
+
     #[cfg(test)]
-    mod biquad {
-      use rasp::filter::Biquad;
-      use rasp::filter::biquad::{
-        Lowpass,
-        Highpass
+    mod rdj {
+      use rasp::filter::rdj::{
+        LowPass,
+        HighPass
       };
 
       #[test]
-      fn biquad() {
-        let mut biquad  = Biquad::new();
-        assert_eq!(0f32, biquad.tick(0f32));
-      }
-
-      #[test]
       fn lowpass() {
-        let mut lowpass = Lowpass::new(44_100f32, 8_000f32, 0.71f32);
-        assert!(lowpass.tick(0.1f32) != 0.1f32);
+        let mut filter = LowPass::new(44_100f32, 8_000f32, 0.71f32);
+        assert!(filter.tick(0.1f32) != 0.1f32);
       }
 
       #[test]
       fn highpass() {
-        let mut highpass = Highpass::new(44_100f32, 12_000f32, 0.71f32);
-        assert!(highpass.tick(0.1f32) != 0.1f32);
+        let mut filter = HighPass::new(44_100f32, 12_000f32, 0.71f32);
+        assert!(filter.tick(0.1f32) != 0.1f32);
       }
     }
   }
@@ -99,18 +99,8 @@ fn exports() {
   use rasp::filter::TwoZero;
 
   use rasp::filter::Biquad;
-  use rasp::filter::biquad::Lowpass;
-  use rasp::filter::biquad::Highpass;
-
-  assert!(true);
-}
-
-#[test]
-#[allow(unused_imports)]
-fn explicit_exports() {
-  // Test all explicity exports to components
-  // (biquad::Biquad is currently the only one)
-  use rasp::filter::biquad::Biquad;
+  use rasp::filter::rdj::LowPass;
+  use rasp::filter::rdj::HighPass;
 
   assert!(true);
 }

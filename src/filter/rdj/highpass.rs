@@ -1,26 +1,26 @@
 use std::f32::consts::PI;
-use filter::biquad::Biquad;
-use filter::biquad::{
+use filter::Biquad;
+use filter::rdj::{
   MIN_FREQUENCY,
   MIN_Q,
   MIN_SAMPLE_RATE
 };
 
 /// A highpass biquad filter.
-pub struct Highpass {
+pub struct HighPass {
   sample_rate: f32,
   cutoff: f32,
   q: f32,
   biquad: Biquad
 }
 
-impl Highpass {
-  /// Creates a new `Highpass` biquad filter.
+impl HighPass {
+  /// Creates a new `HighPass` biquad filter.
   ///
   /// The filter coefficients are immediately calculated.
   pub fn new(sample_rate: f32, cutoff: f32, q: f32) -> Self {
     let mut hpf =
-      Highpass {
+      HighPass {
         sample_rate: sample_rate,
         cutoff: cutoff,
         q: q,
@@ -127,7 +127,7 @@ impl Highpass {
 mod tests {
   use std::f32::EPSILON;
   use std::f32::consts::PI;
-  use filter::biquad::{
+  use filter::rdj::{
     MIN_SAMPLE_RATE,
     MIN_FREQUENCY,
     MIN_Q
@@ -159,27 +159,29 @@ mod tests {
 
   #[test]
   fn new() {
-    let hpf = Highpass::new(44_100f32, 1_200f32, 1f32);
-    assert!((hpf.sample_rate - 44_100f32).abs() <= EPSILON);
-    assert!((hpf.cutoff - 1_200f32      ).abs() <= EPSILON);
-    assert!((hpf.q - 1f32               ).abs() <= EPSILON);
-    let w0      = 2f32 * PI * hpf.cutoff / hpf.sample_rate;
+    let filter = HighPass::new(44_100f32, 1_200f32, 1f32);
+
+    assert!((filter.sample_rate - 44_100f32).abs() <= EPSILON);
+    assert!((filter.cutoff - 1_200f32      ).abs() <= EPSILON);
+    assert!((filter.q - 1f32               ).abs() <= EPSILON);
+
+    let w0      = 2f32 * PI * filter.cutoff / filter.sample_rate;
     let cos_w0  = w0.cos();
-    let alpha   = w0.sin() / (2f32 * hpf.q);
-    assert!(( 0.170_971_028_767f32 - w0            ).abs() <= EPSILON);
-    assert!(( 0.985_420_021_355f32 - cos_w0        ).abs() <= EPSILON);
-    assert!(( 0.085_069_650_158f32 - alpha         ).abs() <= EPSILON);
-    assert!(( 0.914_881_372_392f32 - hpf.biquad.b0 ).abs() <= EPSILON);
-    assert!((-1.829_762_744_784f32 - hpf.biquad.b1 ).abs() <= EPSILON);
-    assert!(( 0.914_881_372_392f32 - hpf.biquad.b2 ).abs() <= EPSILON);
-    assert!((-1.816_325_839_012f32 - hpf.biquad.a1 ).abs() <= EPSILON);
-    assert!(( 0.843_199_650_555f32 - hpf.biquad.a2 ).abs() <= EPSILON);
+    let alpha   = w0.sin() / (2f32 * filter.q);
+
+    assert!(( 0.170_971_028_767f32 - w0).abs()               <= EPSILON);
+    assert!(( 0.985_420_021_355f32 - cos_w0).abs()           <= EPSILON);
+    assert!(( 0.085_069_650_158f32 - alpha).abs()            <= EPSILON);
+    assert!(( 0.914_881_372_392f32 - filter.biquad.b0).abs() <= EPSILON);
+    assert!((-1.829_762_744_784f32 - filter.biquad.b1).abs() <= EPSILON);
+    assert!(( 0.914_881_372_392f32 - filter.biquad.b2).abs() <= EPSILON);
+    assert!((-1.816_325_839_012f32 - filter.biquad.a1).abs() <= EPSILON);
+    assert!(( 0.843_199_650_555f32 - filter.biquad.a2).abs() <= EPSILON);
   }
 
   #[test]
   fn tick() {
     let input = vec![0.5f32, 0.4f32, 0.3f32, 0.2f32, 0.1f32];
-    let mut hpf = Highpass::new(44_100f32, 8_000f32, 0.71f32);
     let expected =
       vec![
          0.216_146_415_734f32,
@@ -188,27 +190,36 @@ mod tests {
         -0.030_156_347_137f32,
          0.011_764_215_888f32
       ];
+
+    let mut filter = HighPass::new(44_100f32, 8_000f32, 0.71f32);
+
     let mut actual: f32;
     for i in 0..input.len() {
-      actual = hpf.tick(input[i]);
+      actual = filter.tick(input[i]);
       assert!((expected[i] - actual).abs() <= EPSILON);
     }
   }
 
   #[test]
   fn accessors() {
-    let mut filter = Highpass::new(44_100f32, 8_000f32, 0.71f32);
+    let mut filter = HighPass::new(44_100f32, 8_000f32, 0.71f32);
+
     filter.set_sample_rate(-2_000f32);
-    assert_eq!(MIN_SAMPLE_RATE, filter.sample_rate());
+    assert!((MIN_SAMPLE_RATE - filter.sample_rate()).abs() <= EPSILON);
+
     filter.set_sample_rate(192_000f32);
-    assert_eq!(192_000f32, filter.sample_rate());
+    assert!((192_000f32 - filter.sample_rate()).abs() <= EPSILON);
+
     filter.set_cutoff(-20f32);
-    assert_eq!(MIN_FREQUENCY, filter.cutoff());
+    assert!((MIN_FREQUENCY - filter.cutoff()).abs() <= EPSILON);
+
     filter.set_cutoff(200_000f32);
-    assert_eq!(192_000f32 / 2f32, filter.cutoff());
+    assert!((192_000f32 / 2f32 - filter.cutoff()).abs() <= EPSILON);
+
     filter.set_q(-10f32);
-    assert_eq!(MIN_Q, filter.q());
+    assert!((MIN_Q - filter.q()).abs() <= EPSILON);
+
     filter.set_q(4f32);
-    assert_eq!(4f32, filter.q());
+    assert!((4f32 - filter.q()).abs() <= EPSILON);
   }
 }
