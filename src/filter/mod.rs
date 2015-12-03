@@ -1,4 +1,4 @@
-pub mod rdj;
+pub mod rbj;
 
 mod delay;
 mod linear_delay;

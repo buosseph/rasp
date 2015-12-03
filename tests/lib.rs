@@ -65,21 +65,23 @@ mod api {
     }
 
     #[cfg(test)]
-    mod rdj {
-      use rasp::filter::rdj::{
+    mod rbj {
+      use rasp::filter::rbj::{
         LowPass,
         HighPass
       };
 
       #[test]
       fn lowpass() {
-        let mut filter = LowPass::new(44_100f32, 8_000f32, 0.71f32);
+        let mut filter = LowPass::new();
+        filter.set_coefficients(44_100f32, 8_000f32, 0.71f32);
         assert!(filter.tick(0.1f32) != 0.1f32);
       }
 
       #[test]
       fn highpass() {
-        let mut filter = HighPass::new(44_100f32, 12_000f32, 0.71f32);
+        let mut filter = HighPass::new();
+        filter.set_coefficients(44_100f32, 12_000f32, 0.71f32);
         assert!(filter.tick(0.1f32) != 0.1f32);
       }
     }
@@ -93,14 +95,25 @@ fn exports() {
   use rasp::filter::Delay;
   use rasp::filter::LinearDelay;
 
-  use rasp::filter::OnePole;
-  use rasp::filter::OneZero;
-  use rasp::filter::TwoPole;
-  use rasp::filter::TwoZero;
+  use rasp::filter::{
+    OnePole,
+    OneZero,
+    TwoPole,
+    TwoZero,
+    Biquad
+  };
 
-  use rasp::filter::Biquad;
-  use rasp::filter::rdj::LowPass;
-  use rasp::filter::rdj::HighPass;
+  use rasp::filter::rbj::{
+    LowPass,
+    HighPass,
+    BandPass1,
+    BandPass2,
+    AllPass,
+    LowShelf,
+    HighShelf,
+    BandStop,
+    Peak
+  };
 
   assert!(true);
 }
