@@ -119,6 +119,13 @@ impl Delay {
     self.memory[tap as usize] += value;
     self.memory[tap as usize]
   }
+
+  /// Clears the internal memory of the delay-line.
+  pub fn clear(&mut self) {
+    for sample in self.memory.iter_mut() {
+      *sample = 0f32;
+    }
+  }
 }
 
 #[cfg(test)]
@@ -131,14 +138,28 @@ mod tests {
     let mut delay1 = Delay::new(0, 4095);
     let delay2 = Delay::new(4, 4095);
 
-    assert_eq!(delay1.next_out(), 0f32);
-    assert_eq!(delay2.next_out(), 0f32);
+    assert!((delay1.next_out() - 0f32).abs() < EPSILON);
+    assert!((delay2.next_out() - 0f32).abs() < EPSILON);
 
     assert!(delay1.get_delay() != delay2.get_delay());
     assert_eq!(delay1.get_max_delay(), delay2.get_max_delay());
 
     delay1.set_delay(4);
-    assert_eq!(delay1.get_delay(), delay2.get_delay());
+    assert_eq!(delay1.get_delay(), delay2.get_delay());    
+  }
+
+  #[test]
+  fn new_beyond_bounds() {
+    let delay1 = Delay::new(2000, 1000);
+    assert_eq!(delay1.get_delay(), delay1.get_max_delay());
+  }
+
+  #[test]
+  fn set_delay() {
+    let max_delay = 1000;
+    let mut delay = Delay::new(500, max_delay);
+    delay.set_delay(2000);
+    assert_eq!(delay.get_delay(), max_delay);
   }
 
   #[test]
@@ -153,6 +174,21 @@ mod tests {
   }
 
   #[test]
+  fn clear() {
+    let delay_size = 380;
+    let mut delay  = Delay::new(delay_size, 4095);
+    for i in 0..delay_size {
+      assert!((delay.tick(i as f32) - 0f32).abs() < EPSILON);
+    }
+
+    delay.clear();
+
+    for i in 0..delay_size {
+      assert!((delay.tick(i as f32) - 0f32).abs() < EPSILON);
+    }
+  }
+
+  #[test]
   fn tap_out() {
     // NOTE: More test cases should be added
     let input     = vec![0f32, 0.25f32, 0.5f32, 0.75f32];
@@ -161,11 +197,11 @@ mod tests {
 
     for sample in input.iter() {
       delay.tick(*sample);
-      assert_eq!(*sample, delay.tap_out(0));
+      assert!((*sample - delay.tap_out(0)).abs() < EPSILON);
     }
 
     for (i, sample) in expected.iter().enumerate() {
-      assert_eq!(*sample, delay.tap_out(i));
+      assert!((*sample - delay.tap_out(i)).abs() < EPSILON);
     }
   }
 
@@ -181,7 +217,7 @@ mod tests {
     }
 
     for sample in expected.iter() {
-      assert_eq!(*sample, delay.tick(0f32));
+      assert!((*sample - delay.tick(0f32)).abs() < EPSILON);
     }
   }
 
@@ -197,7 +233,7 @@ mod tests {
     }
 
     for sample in expected.iter() {
-      assert_eq!(*sample, delay.tick(0f32));
+      assert!((*sample - delay.tick(0f32)).abs() < EPSILON);
     }
   }
 }

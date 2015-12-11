@@ -171,6 +171,27 @@ mod tests {
   }
 
   #[test]
+  fn new_beyond_bounds() {
+    let delay1 = LinearDelay::new(2000f32, 1000);
+    assert!((delay1.get_delay() - delay1.get_max_delay() as f32).abs() < EPSILON);
+
+    let delay2 = LinearDelay::new(-2000f32, 1000);
+    assert!((delay2.get_delay() - 0f32).abs() < EPSILON);
+  }
+
+  #[test]
+  fn set_delay() {
+    let max_delay = 1000;
+    let mut delay = LinearDelay::new(500f32, max_delay);
+
+    delay.set_delay(2000f32);
+    assert!((delay.get_delay() - max_delay as f32).abs() < EPSILON);
+
+    delay.set_delay(-2000f32);
+    assert!((delay.get_delay() - 0f32).abs() < EPSILON);
+  }
+
+  #[test]
   fn tick() {
     // No interpolation case
     let mut input     = vec![0f32; 5];    input[0] = 1f32;
