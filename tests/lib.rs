@@ -2,7 +2,6 @@ extern crate rasp;
 
 #[cfg(test)]
 mod api {
-  #[cfg(test)]
   mod filter {
     use rasp::filter::{
       OnePole,
@@ -86,6 +85,17 @@ mod api {
       }
     }
   }
+
+  mod util {
+    use rasp::util;
+    use std::f32::EPSILON;
+
+    #[test]
+    fn conversions() {
+      assert!((util::to_db(0f32) - -120f32).abs() < EPSILON);
+      assert!((util::to_sample(-120f32) - 0f32).abs() < EPSILON);
+    }
+  }
 }
 
 #[test]
@@ -113,6 +123,11 @@ fn exports() {
     HighShelf,
     BandStop,
     Peak
+  };
+
+  use rasp::util::{
+    to_db,
+    to_sample
   };
 
   assert!(true);
