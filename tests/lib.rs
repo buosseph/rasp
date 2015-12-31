@@ -8,26 +8,8 @@ mod api {
       OneZero,
       TwoPole,
       TwoZero,
-      Biquad,
-      Delay,
-      LinearDelay
+      Biquad
     };
-
-    #[test]
-    fn delay() {
-      // Single sample delay
-      let mut delay = Delay::new(1, 4);
-      assert_eq!(0f32, delay.tick(1f32));
-      assert_eq!(1f32, delay.tick(0f32));
-    }
-
-    #[test]
-    fn linear_delay() {
-      // Single sample delay
-      let mut delay = LinearDelay::new(1f32, 4);
-      assert_eq!(0f32, delay.tick(1f32));
-      assert_eq!(1f32, delay.tick(0f32));
-    }
 
     #[test]
     fn one_pole() {
@@ -86,6 +68,29 @@ mod api {
     }
   }
 
+  mod delay {
+    use rasp::delay::{
+      Delay,
+      LinearDelay
+    };
+
+    #[test]
+    fn delay() {
+      // Single sample delay
+      let mut delay = Delay::new(1, 4);
+      assert_eq!(0f32, delay.tick(1f32));
+      assert_eq!(1f32, delay.tick(0f32));
+    }
+
+    #[test]
+    fn linear_delay() {
+      // Single sample delay
+      let mut delay = LinearDelay::new(1f32, 4);
+      assert_eq!(0f32, delay.tick(1f32));
+      assert_eq!(1f32, delay.tick(0f32));
+    }
+  }
+
   mod util {
     use rasp::util;
     use std::f32::EPSILON;
@@ -102,9 +107,6 @@ mod api {
 #[allow(unused_imports)]
 fn exports() {
   // Test all top-level exports for users
-  use rasp::filter::Delay;
-  use rasp::filter::LinearDelay;
-
   use rasp::filter::{
     OnePole,
     OneZero,
@@ -123,6 +125,11 @@ fn exports() {
     HighShelf,
     BandStop,
     Peak
+  };
+
+  use rasp::delay::{
+    Delay,
+    LinearDelay
   };
 
   use rasp::util::{

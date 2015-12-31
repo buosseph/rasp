@@ -25,7 +25,7 @@ pub fn to_sample(db_value: f32) -> f32 {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
   use super::*;
   use std::f32::*;
 

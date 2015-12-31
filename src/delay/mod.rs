@@ -1,3 +1,7 @@
+mod linear_delay;
+
+pub use self::linear_delay::LinearDelay as LinearDelay;
+
 /// A time-varying delay line.
 pub struct Delay {
   memory: Vec<f32>,
