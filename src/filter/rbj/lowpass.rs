@@ -43,6 +43,7 @@ impl LowPass {
     a2 /= a0;
 
     self.biquad.set_coefficients(b0, b1, b2, a1, a2);
+    self.clear();
   }
 
   /// Processes and stores input sample into memory and outputs calculated
