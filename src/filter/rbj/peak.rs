@@ -1,12 +1,15 @@
-use std::f32::consts::PI;
+use num;
+use num::traits::Float;
+
 use filter::Biquad;
+use traits::{Filter, FloatConst};
 
 /// A peaking biquad filter.
-pub struct Peak {
-  biquad: Biquad
+pub struct Peak<T> {
+  biquad: Biquad<T>
 }
 
-impl Peak {
+impl<T> Peak<T> where T: Float + FloatConst {
   /// Creates a new `Peak` biquad filter.
   pub fn new() -> Self {
     Peak {
@@ -21,46 +24,49 @@ impl Peak {
   /// validated.
   // TODO: Explain value ranges of parameters
   pub fn set_coefficients(&mut self,
-                          sample_rate: f32,
-                          center_frequency: f32,
-                          db_gain: f32,
-                          q: f32)
+                          sample_rate: T,
+                          center_frequency: T,
+                          db_gain: T,
+                          q: T)
   {
-    let a  = 10f32.powf(db_gain / 40f32);
-    let w0 = 2f32 * PI * center_frequency / sample_rate;
+    let one: T = T::one();
+    let two: T = T::two();
+    let ten: T = num::cast(10f64).unwrap();
+    let forty: T = num::cast(40f64).unwrap();
+
+    let a  = ten.powf(db_gain / forty);
+    let w0 = two * T::pi() * center_frequency / sample_rate;
     let cos_w0  = w0.cos();
-    let alpha   = w0.sin() / (2f32 * q);
+    let alpha   = w0.sin() / (two * q);
 
-    let mut b0  =  1f32 + alpha * a;
-    let mut b1  = -2f32 * cos_w0;
-    let mut b2  =  1f32 - alpha * a;
-    let     a0  =  1f32 + alpha / a;
+    let mut b0  =  one + alpha * a;
+    let mut b1  = -two * cos_w0;
+    let mut b2  =  one - alpha * a;
+    let     a0  =  one + alpha / a;
     let mut a1  =  b1;
-    let mut a2  =  1f32 - alpha / a;
+    let mut a2  =  one - alpha / a;
 
-    b0 /= a0;
-    b1 /= a0;
-    b2 /= a0;
-    a1 /= a0;
-    a2 /= a0;
+    b0 = b0 / a0;
+    b1 = b1 / a0;
+    b2 = b2 / a0;
+    a1 = a1 / a0;
+    a2 = a2 / a0;
 
     self.biquad.set_coefficients(b0, b1, b2, a1, a2);
     self.clear();
   }
+}
 
-  /// Processes and stores input sample into memory and outputs calculated
-  /// sample.
-  pub fn tick(&mut self, sample: f32) -> f32 {
+impl<T> Filter<T> for Peak<T> where T: Float {
+  fn tick(&mut self, sample: T) -> T {
     self.biquad.tick(sample)
   }
 
-  /// Resets memory of all previous input and output to zero.
-  pub fn clear(&mut self) {
+  fn clear(&mut self) {
     self.biquad.clear();
   }
 
-  /// Returns the last computed output sample.
-  pub fn last_out(&self) -> f32 {
+  fn last_out(&self) -> T {
     self.biquad.last_out()
   }
 }

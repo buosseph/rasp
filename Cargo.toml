@@ -2,3 +2,6 @@
 name = "rasp"
 version = "0.1.4"
 authors = ["Brian Uosseph <brian.uosseph@gmail.com>"]
+
+[dependencies]
+num = "0.1"

@@ -1,16 +1,18 @@
-use std::f32::consts::PI;
+use num::traits::Float;
+
 use filter::Biquad;
+use traits::{Filter, FloatConst};
 
 /// A low-pass biquad filter.
-pub struct LowPass {
-  biquad: Biquad
+pub struct LowPass<T> {
+  biquad: Biquad<T>
 }
 
-impl LowPass {
+impl<T> LowPass<T> where T: Float + FloatConst {
   /// Creates a new `LowPass` biquad filter.
   pub fn new() -> Self {
     LowPass {
-      biquad: Biquad::new()
+      biquad: Biquad::<T>::new()
     }
   }
 
@@ -21,76 +23,55 @@ impl LowPass {
   /// validated.
   // TODO: Explain value ranges of parameters
   pub fn set_coefficients(&mut self,
-                          sample_rate: f32,
-                          cutoff_frequency: f32,
-                          q: f32)
+                          sample_rate: T,
+                          cutoff_frequency: T,
+                          q: T)
   {
-    let w0 = 2f32 * PI * cutoff_frequency / sample_rate;
+    let one: T = T::one();
+    let two: T = T::two();
+
+    let w0 = two * T::pi() * cutoff_frequency / sample_rate;
     let cos_w0  = w0.cos();
-    let alpha   = w0.sin() / (2f32 * q);
+    let alpha   = w0.sin() / (two * q);
 
-    let mut b0  = (1f32 - cos_w0) / 2f32;
-    let mut b1  =  1f32 - cos_w0;
+    let mut b0  = (one - cos_w0) / two;
+    let mut b1  =  one - cos_w0;
     let mut b2  =  b0;
-    let     a0  =  1f32 + alpha;
-    let mut a1  = -2f32 * cos_w0;
-    let mut a2  =  1f32 - alpha;
+    let     a0  =  one + alpha;
+    let mut a1  = -two * cos_w0;
+    let mut a2  =  one - alpha;
 
-    b0 /= a0;
-    b1 /= a0;
-    b2 /= a0;
-    a1 /= a0;
-    a2 /= a0;
+    b0 = b0 / a0;
+    b1 = b1 / a0;
+    b2 = b2 / a0;
+    a1 = a1 / a0;
+    a2 = a2 / a0;
 
     self.biquad.set_coefficients(b0, b1, b2, a1, a2);
     self.clear();
   }
+}
 
-  /// Processes and stores input sample into memory and outputs calculated
-  /// sample.
-  pub fn tick(&mut self, sample: f32) -> f32 {
+impl<T> Filter<T> for LowPass<T> where T: Float {
+  fn tick(&mut self, sample: T) -> T {
     self.biquad.tick(sample)
   }
 
-  /// Resets memory of all previous input and output to zero.
-  pub fn clear(&mut self) {
+  fn clear(&mut self) {
     self.biquad.clear();
   }
 
-  /// Returns the last computed output sample.
-  pub fn last_out(&self) -> f32 {
+  fn last_out(&self) -> T {
     self.biquad.last_out()
   }
 }
 
 #[cfg(test)]
 mod tests {
+  use super::*;
   use std::f32::EPSILON;
   use std::f32::consts::PI;
-  use super::*;
-
-  /*
-   *  Octave input used to test, print all values to 12 decimal point for use in tests
-   *
-   *  input, output
-   *  x, y
-   *
-   *  calc_intermids
-   *  w0 = 2 * pi * cutoff / fs; cos_w0 = cos(w0); alpha = sin(w0) / (2 * q); printf("%.12f\n", w0), printf("%.12f\n", cos_w0), printf("%.12f\n", alpha)
-   *
-   *  calc_coeffs
-   *  a0 = 1 + alpha; b0 = ((1-cos_w0)/2)/a0; b1 = (1-cos_w0)/a0; b2 = b0; a1 = (-2*cos_w0)/a0; a2 = (1-alpha)/a0;
-   *
-   *  clear
-   *  x_z1 = x_z2 = y_z1 = y_z2 = 0
-   *
-   *  tick (and print y)
-   *  y = b0 * x + b1 * x_z1 + b2 * x_z2 - a1 * y_z1 - a2 * y_z2; x_z2 = x_z1; x_z1 = x; y_z2 = y_z1; y_z1 = y; printf("%.12f\n", y)
-   *
-   *  print to 12 decimal places
-   *  printf("%.12f\n", y)
-   *  printf("%.12f\n", b0), printf("%.12f\n", b1), printf("%.12f\n", b2), printf("%.12f\n", a1), printf("%.12f\n", a2)
-   */
+  use ::traits::Filter;
 
   #[test]
   fn new() {

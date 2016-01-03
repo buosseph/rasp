@@ -5,6 +5,7 @@ extern crate rasp;
 mod api {
   mod analysis {
     use std::f32::EPSILON;
+    use rasp::traits::Filter;
     use rasp::analysis::{
       LeakyIntegrator,
       PeakEnvDetector,
@@ -34,6 +35,7 @@ mod api {
 
   mod filter {
     use std::f32::EPSILON;
+    use rasp::traits::Filter;
     use rasp::filter::{
       OnePole,
       OneZero,
@@ -76,6 +78,7 @@ mod api {
 
     #[cfg(test)]
     mod rbj {
+      use rasp::traits::Filter;
       use rasp::filter::rbj::{
         LowPass,
         HighPass,
@@ -154,6 +157,8 @@ mod api {
   }
 
   mod delay {
+    use std::f32::EPSILON;
+    use rasp::traits::Filter;
     use rasp::delay::{
       Delay,
       LinearDelay
@@ -163,16 +168,16 @@ mod api {
     fn delay() {
       // Single sample delay
       let mut delay = Delay::new(1, 4);
-      assert_eq!(0f32, delay.tick(1f32));
-      assert_eq!(1f32, delay.tick(0f32));
+      assert!((delay.tick(1f32) - 0f32).abs() < EPSILON );
+      assert!((delay.tick(0f32) - 1f32).abs() < EPSILON );
     }
 
     #[test]
     fn linear_delay() {
       // Single sample delay
       let mut delay = LinearDelay::new(1f32, 4);
-      assert_eq!(0f32, delay.tick(1f32));
-      assert_eq!(1f32, delay.tick(0f32));
+      assert!((delay.tick(1f32) - 0f32).abs() < EPSILON );
+      assert!((delay.tick(0f32) - 1f32).abs() < EPSILON );
     }
   }
 

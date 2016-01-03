@@ -1,34 +1,58 @@
+use num;
+use num::traits::Float;
+
+use traits::Filter;
+
 /// A single channel, second-order filter.
 ///
-/// A `Biquad` is a type of second-order filter that uses the following
-/// equation:
+/// A `Biquad` is a second-order recursive filter.
+/// This implementation uses a [Direct Form I](https://en.wikipedia.org/wiki/Digital_biquad_filter#Direct_Form_1)
+/// realization using the following equation:
 ///
 /// `y[n] = b0*x[n] + b1*x[n-1] + b2*x[n-2] - a1*y[n-1] - a2*y[n-2]`
 ///
 /// It has two feedforward coefficients, `b1` and `b2`, and two feedback
 /// coefficients, `a1` and `a2`.
-pub struct Biquad {
-  x_z1: f32,
-  x_z2: f32,
-  y_z1: f32,
-  y_z2: f32,
-  pub b0: f32,
-  pub b1: f32,
-  pub b2: f32,
-  pub a1: f32,
-  pub a2: f32
+pub struct Biquad<T> {
+  x_z1: T,
+  x_z2: T,
+  y_z1: T,
+  y_z2: T,
+  pub b0: T,
+  pub b1: T,
+  pub b2: T,
+  pub a1: T,
+  pub a2: T
 }
 
-impl Biquad {
+impl<T> Biquad<T> where T: Float {
   /// Creates a new `Biquad` filter.
   ///
   /// The filter will be initalized in a state that does not alter the input
   /// signal.
-  pub fn new() -> Biquad {
+  ///
+  /// # Examples
+  ///
+  /// ```
+  /// # #![allow(unused_mut)]
+  /// use rasp::filter::Biquad;
+  ///
+  /// let mut filter1: Biquad<f32> = Biquad::new();
+  /// let mut filter2: Biquad<f64> = Biquad::new();
+  /// let mut filter3 = Biquad::<f32>::new();
+  /// let mut filter4 = Biquad::<f64>::new();
+  /// ```
+  pub fn new() -> Self {
     Biquad {
-      x_z1: 0f32, x_z2: 0f32,
-      y_z1: 0f32, y_z2: 0f32,
-      b0: 1f32, b1: 0f32, b2: 0f32, a1: 0f32, a2: 0f32
+      x_z1: num::zero(),
+      x_z2: num::zero(),
+      y_z1: num::zero(),
+      y_z2: num::zero(),
+      b0: num::one(),
+      b1: num::zero(),
+      b2: num::zero(),
+      a1: num::zero(),
+      a2: num::zero()
     }
   }
 
@@ -36,55 +60,44 @@ impl Biquad {
   ///
   /// `b1`, `b2` are feedforwards, or zeroes, and `a1`, `a2` are feedbacks,
   /// or poles.
-  pub fn set_coefficients(&mut self, b0: f32, b1: f32, b2: f32, a1: f32, a2: f32) {
-    self.b0 = b0; self.b1 = b1; self.b2 = b2;
-    self.a1 = a1; self.a2 = a2;
+  pub fn set_coefficients(&mut self, b0: T, b1: T, b2: T, a1: T, a2: T) {
+    self.b0 = b0;
+    self.b1 = b1;
+    self.b2 = b2;
+    self.a1 = a1;
+    self.a2 = a2;
   }
+}
 
-  /// Processes and stores input sample into memory and outputs calculated
-  /// sample.
-  pub fn tick(&mut self, sample: f32) -> f32 {
+impl<T> Filter<T> for Biquad<T> where T: Float {
+  fn tick(&mut self, sample: T) -> T {
     let output = self.b0 * sample
       + self.b1 * self.x_z1 + self.b2 * self.x_z2
       - self.a1 * self.y_z1 - self.a2 * self.y_z2;
-    self.x_z2 = self.x_z1; self.x_z1 = sample;
-    self.y_z2 = self.y_z1; self.y_z1 = output;
+    self.x_z2 = self.x_z1;
+    self.x_z1 = sample;
+    self.y_z2 = self.y_z1;
+    self.y_z1 = output;
     output
   }
 
-  /// Resets memory of all previous input and output to zero.
-  pub fn clear(&mut self) {
-    self.x_z1 = 0f32; self.x_z2 = 0f32;
-    self.y_z1 = 0f32; self.y_z2 = 0f32;
+  fn clear(&mut self) {
+    self.x_z1 = num::zero();
+    self.x_z2 = num::zero();
+    self.y_z1 = num::zero();
+    self.y_z2 = num::zero();
   }
 
-  /// Returns the last computed output sample.
-  pub fn last_out(&self) -> f32 {
+  fn last_out(&self) -> T {
     self.y_z1
   }
 }
 
 #[cfg(test)]
 mod tests {
-  use std::f32::EPSILON;
   use super::*;
-
-  /*
-   *  Octave input used to test, print all values to 12 decimal point for use in tests
-   *
-   *  input, output
-   *  x, y
-   *
-   *  clear
-   *  x_z1 = x_z2 = y_z1 = y_z2 = 0
-   *
-   *  tick (and print y)
-   *  y = b0 * x + b1 * x_z1 + b2 * x_z2 - a1 * y_z1 - a2 * y_z2; x_z2 = x_z1; x_z1 = x; y_z2 = y_z1; y_z1 = y; printf("%.12f\n", y)
-   *
-   *  print to 12 decimal places
-   *  printf("%.12f\n", y)
-   *  printf("%.12f\n", b0), printf("%.12f\n", b1), printf("%.12f\n", b2), printf("%.12f\n", a1), printf("%.12f\n", a2)
-   */
+  use std::f32::EPSILON;
+  use ::traits::Filter;
 
   #[test]
   fn tick() {

@@ -16,21 +16,21 @@
 
 */
 
-mod lowpass;
-mod highpass;
-mod bandpass;
 mod allpass;
-mod lowshelf;
-mod highshelf;
+mod bandpass;
 mod bandstop;
+mod highpass;
+mod highshelf;
+mod lowpass;
+mod lowshelf;
 mod peak;
 
-pub use self::lowpass::LowPass     as LowPass;
-pub use self::highpass::HighPass   as HighPass;
+pub use self::allpass::AllPass     as AllPass;
 pub use self::bandpass::BandPass1  as BandPass1;
 pub use self::bandpass::BandPass2  as BandPass2;
-pub use self::allpass::AllPass     as AllPass;
-pub use self::lowshelf::LowShelf   as LowShelf;
-pub use self::highshelf::HighShelf as HighShelf;
 pub use self::bandstop::BandStop   as BandStop;
+pub use self::highpass::HighPass   as HighPass;
+pub use self::highshelf::HighShelf as HighShelf;
+pub use self::lowpass::LowPass     as LowPass;
+pub use self::lowshelf::LowShelf   as LowShelf;
 pub use self::peak::Peak           as Peak;

@@ -1,15 +1,20 @@
+use num;
+use num::traits::Float;
+
+use traits::Filter;
+
 /// A peak envelope detector.
 ///
 /// [Based on code by Bram](http://musicdsp.org/showArchiveComment.php?ArchiveID=97)
-pub struct PeakEnvDetector {
+pub struct PeakEnvDetector<T> {
   // The alpha, or a1, coefficients used in the integrator
-  attack_gain: f32,
-  release_gain: f32,
+  attack_gain: T,
+  release_gain: T,
   // The integrator memory
-  envelope: f32,
+  envelope: T,
 }
 
-impl PeakEnvDetector {
+impl<T> PeakEnvDetector<T> where T: Float {
   /// Creates a new `PeakEnvDetector`.
   ///
   /// The envelope detector will be initialized in a state that does not alter
@@ -19,7 +24,6 @@ impl PeakEnvDetector {
   /// # Examples
   ///
   /// ```
-  /// use std::f32::EPSILON;
   /// use rasp::analysis::PeakEnvDetector;
   ///
   /// let sample_rate = 44100f32;
@@ -32,14 +36,14 @@ impl PeakEnvDetector {
   /// ```
   pub fn new() -> Self {
     PeakEnvDetector {
-      attack_gain: 0f32,
-      release_gain: 0f32,
-      envelope: 0f32
+      attack_gain: num::zero(),
+      release_gain: num::zero(),
+      envelope: num::zero()
     }
   }
 
   /// Returns the internal attack gain.
-  pub fn get_attack_gain(&self) -> f32 {
+  pub fn get_attack_gain(&self) -> T {
     self.attack_gain
   }
 
@@ -65,14 +69,14 @@ impl PeakEnvDetector {
   /// detector.set_release(release_time * sample_rate);
   ///
   /// ```
-  pub fn set_attack(&mut self, attack_length: f32) {
-    if attack_length > 0f32 && attack_length.is_finite() {
-      self.attack_gain = (-1f32 / attack_length).exp();
+  pub fn set_attack(&mut self, attack_length: T) {
+    if attack_length > num::zero() && attack_length.is_finite() {
+      self.attack_gain = (-T::one() / attack_length).exp();
     }
   }
 
   /// Returns the internal release gain.
-  pub fn get_release_gain(&self) -> f32 {
+  pub fn get_release_gain(&self) -> T {
     self.release_gain
   }
 
@@ -98,13 +102,15 @@ impl PeakEnvDetector {
   /// detector.set_release(release_time * sample_rate);
   ///
   /// ```
-  pub fn set_release(&mut self, release_length: f32) {
-    if release_length > 0f32 && release_length.is_finite() {
-      self.release_gain = (-1f32 / release_length).exp();
+  pub fn set_release(&mut self, release_length: T) {
+    if release_length > num::zero() && release_length.is_finite() {
+      self.release_gain = (-T::one() / release_length).exp();
     }
   }
+}
 
-  pub fn tick(&mut self, sample: f32) -> f32 {
+impl<T> Filter<T> for PeakEnvDetector<T> where T: Float {
+  fn tick(&mut self, sample: T) -> T {
     let input_envelope = sample.abs();
 
     // The amount to feedback into input_envelope
@@ -120,11 +126,11 @@ impl PeakEnvDetector {
     self.envelope
   }
 
-  pub fn clear(&mut self) {
-    self.envelope = 0f32;
+  fn clear(&mut self) {
+    self.envelope = num::zero();
   }
 
-  pub fn last_out(&self) -> f32 {
+  fn last_out(&self) -> T {
     self.envelope
   }
 }
@@ -133,10 +139,11 @@ impl PeakEnvDetector {
 mod tests {
   use super::*;
   use std::f32::*;
+  use ::traits::Filter;
 
   #[test]
   fn new() {
-    let detector = PeakEnvDetector::new();
+    let detector = PeakEnvDetector::<f32>::new();
 
     assert!((detector.last_out() - 0f32).abs() < EPSILON);
     assert!((detector.get_attack_gain() - 0f32).abs() < EPSILON);

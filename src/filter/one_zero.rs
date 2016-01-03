@@ -1,3 +1,8 @@
+use num;
+use num::traits::Float;
+
+use traits::Filter;
+
 /// A single channel, one zero digital filter.
 ///
 /// A `OneZero` filter uses the following equation:
@@ -5,70 +10,70 @@
 /// `y[n] = b0*x[n] + b1*x[n-1]`
 ///
 /// It has one feedforward coefficient, `b1`. 
-pub struct OneZero {
-  x_z1: f32,
-  y_z1: f32, // Only necessary for last_out()
-  pub b0: f32,
-  pub b1: f32
+pub struct OneZero<T: Float> {
+  x_z1: T,
+  // Only necessary for last_out()
+  y_z1: T,
+  pub b0: T,
+  pub b1: T
 }
 
-impl OneZero {
+impl<T> OneZero<T> where T: Float {
   /// Creates a new `OneZero` filter.
   ///
   /// The filter will be initalized in a state that does not alter the input
   /// signal.
-  pub fn new() -> OneZero {
+  ///
+  /// # Examples
+  ///
+  /// ```
+  /// # #![allow(unused_mut)]
+  /// use rasp::filter::OneZero;
+  ///
+  /// let mut filter1: OneZero<f32> = OneZero::new();
+  /// let mut filter2: OneZero<f64> = OneZero::new();
+  /// let mut filter3 = OneZero::<f32>::new();
+  /// let mut filter4 = OneZero::<f64>::new();
+  /// ```
+  pub fn new() -> Self {
     OneZero {
-      x_z1: 0f32,
-      y_z1: 0f32,
-      b0: 1f32, b1: 0f32
+      x_z1: num::zero(),
+      y_z1: num::zero(),
+      b0: num::one(),
+      b1: num::zero()
     }
   }
 
   /// Sets all filter coefficients at once.
   ///
   /// `b1` is a feedforward, or zero.
-  pub fn set_coefficients(&mut self, b0: f32, b1: f32) {
+  pub fn set_coefficients(&mut self, b0: T, b1: T) {
     self.b0 = b0;
     self.b1 = b1;
   }
+}
 
-  /// Processes and stores input sample into memory and outputs calculated
-  /// sample.
-  pub fn tick(&mut self, sample: f32) -> f32 {
+impl<T> Filter<T> for OneZero<T> where T: Float {
+  fn tick(&mut self, sample: T) -> T {
     self.y_z1 = self.b0 * sample + self.b1 * self.x_z1;
     self.x_z1 = sample;
     self.y_z1
   }
 
-  /// Resets memory of all previous input and output to zero.
-  pub fn clear(&mut self) {
-    self.x_z1 = 0f32;
+  fn clear(&mut self) {
+    self.x_z1 = num::zero();
   }
 
-  /// Returns the last computed output sample.
-  pub fn last_out(&self) -> f32 {
+  fn last_out(&self) -> T {
     self.y_z1
   }
 }
 
 #[cfg(test)]
 mod tests {
-  use std::f32::EPSILON;
   use super::*;
-
-  /*
-   *  Octave input used to test, print all values to 12 decimal point for use in tests
-   *
-   *  clear
-   *  x_z1 = 0
-   *
-   *  tick (and print y)
-   *  y = b0 * x + b1 * x_z1; x_z1 = x; printf("%.12f\n", y)
-   *
-   *  print to 12 decimal places
-   *  printf("%.12f\n", y)
-   */
+  use std::f32::EPSILON;
+  use ::traits::Filter;
 
   #[test]
   fn tick() {

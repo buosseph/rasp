@@ -1,16 +1,19 @@
-use std::f32::consts::PI;
+use num;
+use num::traits::Float;
+
 use filter::Biquad;
+use traits::{Filter, FloatConst};
 
 /// A high-shelf biquad filter.
-pub struct HighShelf {
-  biquad: Biquad
+pub struct HighShelf<T> {
+  biquad: Biquad<T>
 }
 
-impl HighShelf {
+impl<T> HighShelf<T> where T: Float + FloatConst {
   /// Creates a new `HighShelf` biquad filter.
   pub fn new() -> Self {
     HighShelf {
-      biquad: Biquad::new()
+      biquad: Biquad::<T>::new()
     }
   }
 
@@ -21,48 +24,54 @@ impl HighShelf {
   /// are not validated.
   // TODO: Explain value ranges of parameters
   pub fn set_coefficients(&mut self,
-                          sample_rate: f32,
-                          cutoff_frequency: f32,
-                          db_gain: f32,
-                          shelf_slope: f32)
+                          sample_rate: T,
+                          cutoff_frequency: T,
+                          db_gain: T,
+                          shelf_slope: T)
   {
-    let a  = 10f32.powf(db_gain / 40f32);
-    let w0 = 2f32 * PI * cutoff_frequency / sample_rate;
+    let one: T = T::one();
+    let two: T = T::two();
+    let ten: T = num::cast(10f64).unwrap();
+    let forty: T = num::cast(40f64).unwrap();
+
+    let a  = ten.powf(db_gain / forty);
+    let w0 = two * T::pi() * cutoff_frequency / sample_rate;
     let cos_w0 = w0.cos();
-    let alpha = w0.sin() / 2f32
-              * ((a + 1f32/a) * (1f32/shelf_slope - 1f32) + 2f32).sqrt();
-    let sqrt_product = 2f32 * a.sqrt() * alpha;
+    let alpha = w0.sin() / two
+              * ((a + one/a) * (one/shelf_slope - one) + two).sqrt();
 
-    let mut b0  =         a * ((a + 1f32) + (a - 1f32) * cos_w0 + sqrt_product);
-    let mut b1  = -2f32 * a * ((a - 1f32) + (a + 1f32) * cos_w0);
-    let mut b2  =         a * ((a + 1f32) + (a - 1f32) * cos_w0 - sqrt_product);
-    let     a0  =              (a + 1f32) - (a - 1f32) * cos_w0 + sqrt_product;
-    let mut a1  =      2f32 * ((a - 1f32) - (a + 1f32) * cos_w0);
-    let mut a2  =              (a + 1f32) - (a - 1f32) * cos_w0 - sqrt_product;
+    let a_plus_one = a + one;
+    let a_subt_one = a - one;
+    let sqrt_product = two * a.sqrt() * alpha;
 
-    b0 /= a0;
-    b1 /= a0;
-    b2 /= a0;
-    a1 /= a0;
-    a2 /= a0;
+    let mut b0  =        a * (a_plus_one + a_subt_one * cos_w0 + sqrt_product);
+    let mut b1  = -two * a * (a_subt_one + a_plus_one * cos_w0);
+    let mut b2  =        a * (a_plus_one + a_subt_one * cos_w0 - sqrt_product);
+    let     a0  =             a_plus_one - a_subt_one * cos_w0 + sqrt_product;
+    let mut a1  =      two * (a_subt_one - a_plus_one * cos_w0);
+    let mut a2  =             a_plus_one - a_subt_one * cos_w0 - sqrt_product;
+
+    b0 = b0 / a0;
+    b1 = b1 / a0;
+    b2 = b2 / a0;
+    a1 = a1 / a0;
+    a2 = a2 / a0;
 
     self.biquad.set_coefficients(b0, b1, b2, a1, a2);
     self.clear();
   }
+}
 
-  /// Processes and stores input sample into memory and outputs calculated
-  /// sample.
-  pub fn tick(&mut self, sample: f32) -> f32 {
+impl<T> Filter<T> for HighShelf<T> where T: Float {
+  fn tick(&mut self, sample: T) -> T {
     self.biquad.tick(sample)
   }
 
-  /// Resets memory of all previous input and output to zero.
-  pub fn clear(&mut self) {
+  fn clear(&mut self) {
     self.biquad.clear();
   }
 
-  /// Returns the last computed output sample.
-  pub fn last_out(&self) -> f32 {
+  fn last_out(&self) -> T {
     self.biquad.last_out()
   }
 }

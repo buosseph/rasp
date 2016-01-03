@@ -1,24 +1,50 @@
+use num;
+use num::traits::Float;
+
+use traits::{
+  Filter,
+  TappableDelayLine
+};
+
 /// A time-varying, linear interpolating delay line.
-pub struct LinearDelay {
-  memory: Vec<f32>,
+pub struct LinearDelay<T> {
+  memory: Vec<T>,
+  output: T,
   read_ptr: usize,
   write_ptr: usize,
   /// Delay time as a number of samples, which must be less than or equal to
   /// the size of the delay internal memory.
   delay: f32,
   do_next_out: bool,
-  next_out: f32,
+  next_out: T,
   // Interpolation multiplers
-  alpha: f32,
-  om_alpha: f32
+  alpha: T,
+  om_alpha: T
 }
 
-impl LinearDelay {
+impl<T> LinearDelay<T> where T: Float {
   /// Creates a delay line.
   ///
   /// Both `delay` and `max_delay` are represented in samples. The `delay`
   /// value will be clipped if it is greater than `max_delay`.
-  pub fn new(delay: f32, max_delay: usize) -> LinearDelay {
+  ///
+  /// # Examples
+  ///
+  /// ```
+  /// # #![allow(unused_mut)]
+  /// use rasp::delay::LinearDelay;
+  ///
+  /// let sample_rate: usize = 44100;
+  /// let max_delay = 5; // seconds
+  /// let delay = 1300.5f32; // samples
+  ///
+  /// let mut delay1: LinearDelay<f32> = LinearDelay::new(delay, max_delay * sample_rate);
+  /// let mut delay2: LinearDelay<f64> = LinearDelay::new(delay, max_delay * sample_rate);
+  /// let mut delay3 = LinearDelay::<f32>::new(delay, max_delay * sample_rate);
+  /// let mut delay4 = LinearDelay::<f64>::new(delay, max_delay * sample_rate);
+  /// ```
+  pub fn new(delay: f32,
+             max_delay: usize) -> Self {
     let mut delay_time = delay;
     if delay_time > max_delay as f32 {
       delay_time = max_delay as f32;
@@ -29,14 +55,15 @@ impl LinearDelay {
 
     let mut delay_line =
       LinearDelay {
-        memory: vec![0f32; max_delay + 1],
+        memory: vec![num::zero(); max_delay + 1],
+        output: num::zero(),
         read_ptr: 0,
         write_ptr: 0,
         delay: 0f32,
         do_next_out: true,
-        next_out: 0f32,
-        alpha: 0f32,
-        om_alpha: 0f32
+        next_out: num::zero(),
+        alpha: num::zero(),
+        om_alpha: num::zero()
       };
 
     delay_line.set_delay(delay_time);
@@ -46,7 +73,7 @@ impl LinearDelay {
   /// Set the maximum delay-line length, in samples.
   pub fn set_max_delay(&mut self, delay: usize) {
     if delay < self.memory.len() { return; }
-    self.memory.resize(delay + 1, 0f32);
+    self.memory.resize(delay + 1, num::zero());
   }
 
   /// Returns the maximum delay-line lenght, in samples.
@@ -81,8 +108,8 @@ impl LinearDelay {
     }
 
     // save fractional part
-    self.alpha = read_ptr_integer - self.read_ptr as f32;
-    self.om_alpha = 1f32 - self.alpha;
+    self.alpha = num::cast(read_ptr_integer - self.read_ptr as f32).unwrap();
+    self.om_alpha = T::one() - self.alpha;
   }
 
   /// Returns the current delay-line length, in samples.
@@ -91,16 +118,17 @@ impl LinearDelay {
   }
 
   /// Returns the value that will be output by the next call to `tick()`.
-  pub fn next_out(&mut self) -> f32 {
+  pub fn next_out(&mut self) -> T {
     if self.do_next_out {
       // First half of interpolation
       self.next_out = self.memory[self.read_ptr] * self.om_alpha;
       // Second half
       if self.read_ptr < self.memory.len() - 1 {
-        self.next_out += self.memory[self.read_ptr + 1] * self.alpha;
+        self.next_out = self.next_out
+                      + (self.memory[self.read_ptr + 1] * self.alpha);
       }
       else {
-        self.next_out += self.memory[0] * self.alpha;
+        self.next_out = self.next_out + (self.memory[0] * self.alpha);
       }
 
       self.do_next_out = false
@@ -108,29 +136,40 @@ impl LinearDelay {
 
     return self.next_out;
   }
+}
 
-  /// Processes and stores input sample into memory and outputs calculated
-  /// sample.
-  pub fn tick(&mut self, sample: f32) -> f32 {
+impl<T> Filter<T> for LinearDelay<T> where T: Float {
+  fn tick(&mut self, sample: T) -> T {
     // write input sample into memory
     self.memory[self.write_ptr] = sample;
     self.write_ptr += 1;
     self.write_ptr %= self.memory.len();
 
     // interpolate
-    let output = self.next_out();
+    self.output = self.next_out();
     self.do_next_out = true;
 
     // increment read_ptr
     self.read_ptr += 1;
     self.read_ptr %= self.memory.len();
 
-    output
+    self.output
   }
 
-  /// Returns the value at `tap_delay` samples from the current delay-line
-  /// input.
-  pub fn tap_out(&self, tap_delay: usize) -> f32 {
+  fn clear(&mut self) {
+    for sample in self.memory.iter_mut() {
+      *sample = num::zero();
+    }
+    self.output = num::zero();
+  }
+
+  fn last_out(&self) -> T {
+    self.output
+  }
+}
+
+impl<T> TappableDelayLine<T> for LinearDelay<T> where T: Float {
+  fn tap_out(&self, tap_delay: usize) -> T {
     let mut tap: isize = self.write_ptr as isize - tap_delay as isize - 1;
     if tap < 0 {
       tap += self.memory.len() as isize;
@@ -138,26 +177,34 @@ impl LinearDelay {
     self.memory[tap as usize]
   }
 
-  /// Sets the value at `tap_delay` samples from the current delay-line
-  /// input.
-  pub fn tap_in(&mut self, value: f32, tap_delay: usize) {
+  fn tap_in(&mut self, value: T, tap_delay: usize) {
     let mut tap: isize = self.write_ptr as isize - tap_delay as isize - 1;
     if tap < 0 {
       tap += self.memory.len() as isize;
     }
     self.memory[tap as usize] = value;
   }
+
+  fn add_to(&mut self, value: T, tap_delay: usize) -> T {
+    let mut tap: isize = self.write_ptr as isize - tap_delay as isize - 1;
+    if tap < 0 {
+      tap += self.memory.len() as isize;
+    }
+    self.memory[tap as usize] = self.memory[tap as usize] + value;
+    self.memory[tap as usize]
+  }
 }
 
 #[cfg(test)]
 mod tests {
-  use std::f32::EPSILON;
   use super::*;
+  use std::f32::EPSILON;
+  use ::traits::{Filter, TappableDelayLine};
 
   #[test]
   fn new() {
-    let mut delay1 = LinearDelay::new(0f32, 4095);
-    let mut delay2 = LinearDelay::new(0.5f32, 4095);
+    let mut delay1 = LinearDelay::<f32>::new(0f32, 4095);
+    let mut delay2 = LinearDelay::<f32>::new(0.5f32, 4095);
 
     assert_eq!(delay1.next_out(), 0f32);
     assert_eq!(delay2.next_out(), 0f32);
@@ -172,17 +219,17 @@ mod tests {
 
   #[test]
   fn new_beyond_bounds() {
-    let delay1 = LinearDelay::new(2000f32, 1000);
+    let delay1 = LinearDelay::<f32>::new(2000f32, 1000);
     assert!((delay1.get_delay() - delay1.get_max_delay() as f32).abs() < EPSILON);
 
-    let delay2 = LinearDelay::new(-2000f32, 1000);
+    let delay2 = LinearDelay::<f32>::new(-2000f32, 1000);
     assert!((delay2.get_delay() - 0f32).abs() < EPSILON);
   }
 
   #[test]
   fn set_delay() {
     let max_delay = 1000;
-    let mut delay = LinearDelay::new(500f32, max_delay);
+    let mut delay = LinearDelay::<f32>::new(500f32, max_delay);
 
     delay.set_delay(2000f32);
     assert!((delay.get_delay() - max_delay as f32).abs() < EPSILON);
@@ -196,14 +243,14 @@ mod tests {
     // No interpolation case
     let mut input     = vec![0f32; 5];    input[0] = 1f32;
     let mut expected  = vec![0f32; 5]; expected[4] = 1f32;
-    let mut delay1    = LinearDelay::new(4f32, 4095);
+    let mut delay1    = LinearDelay::<f32>::new(4f32, 4095);
 
     for (i, sample) in input.iter().enumerate() {
       assert!((expected[i] - delay1.tick(*sample)).abs() < EPSILON);
     }
 
     // Interpolation case
-    let mut delay2 = LinearDelay::new(2.5f32, 4095);
+    let mut delay2 = LinearDelay::<f32>::new(2.5f32, 4095);
     expected = vec![0f32; 5];
     expected[2] = 0.5f32;
     expected[3] = 0.5f32;
@@ -218,7 +265,7 @@ mod tests {
     // NOTE: More test cases should be added
     let input     = vec![0f32, 0.25f32, 0.5f32, 0.75f32];
     let expected  = vec![0.75f32, 0.5f32, 0.25f32, 0f32];
-    let mut delay = LinearDelay::new(4f32, 4095);
+    let mut delay = LinearDelay::<f32>::new(4f32, 4095);
 
     for sample in input.iter() {
       delay.tick(*sample);
@@ -235,7 +282,7 @@ mod tests {
     // NOTE: More test cases should be added
     let input     = vec![0f32, 0.25f32, 0.5f32, 0.75f32];
     let expected  = vec![0.75f32, 0.5f32, 0.25f32, 0f32];
-    let mut delay = LinearDelay::new(4f32, 4095);
+    let mut delay = LinearDelay::<f32>::new(4f32, 4095);
 
     for (i, sample) in input.iter().enumerate() {
       delay.tap_in(*sample, i);
