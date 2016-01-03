@@ -1,7 +1,7 @@
 /// Converts a sample value to a dBFS value.
 ///
 /// If the sample is really small, or if the sample is `NaN` or infinite, it
-// will be assumed to be -120dBFS.
+/// will be assumed to be -120dBFS.
 pub fn to_db(sample: f32) -> f32 {
   if sample > 1e-6f32 && sample.is_finite() {
     20f32 * sample.log10()

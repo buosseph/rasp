@@ -4,23 +4,23 @@
 
 An audio signal processing library in Rust.
 
-This mainly is a project for me to learn, and implement, various DSP concepts.
+This is a side project for me to learn, and implement, various DSP concepts.
 
 ## Design
-The design, and general usage, of this library is greatly influenced by [The Synthesis Toolkit](https://ccrma.stanford.edu/software/stk/index.html) which is hosted by CCRMA and written in C++. All components implement a `tick` function, which passes an audio sample into the component to process and returns some output.
-
-## TODO
-- Main Features
-  - [ ] Add examples
-    - [ ] One per component
-    - [ ] Multi-channel data examples
-  - [ ] Benchmarks and profiling against STK C++ equivalent
+The design, and general usage, of this library is greatly influenced by [The Synthesis Toolkit](https://ccrma.stanford.edu/software/stk/index.html) which is hosted by CCRMA and written in C++. All components implement a `tick` function, which take an audio sample to process and returns some output.
 
 ### Future Additions
-Features and components I'd like to add in the future, none of which are guaranteed.
+Features and components I'd like to add in the future.
 
-- Allpass interpolating delay? (under `mod filter`, see `stk::DelayA`)
-- Common Effects? (All optional, or just as examples)
+- `AllpassDelay`, an all-pass interpolating delay-line (see `stk::DelayA`)
+- More filters (Based on DSPFilters by vinniefalco, all optional)
+  - `filter::butterworth`
+  - `filter::chebyshev1`
+  - `filter::chebyshev2`
+  - `filter::elliptic`
+  - `filter::bessel`
+  - `filter::legendre`
+- Common effects? (All optional, or just as examples)
   - CombFilter
   - Chorus
   - Flanger
@@ -28,22 +28,13 @@ Features and components I'd like to add in the future, none of which are guarant
   - PitchShifter
   - Echo
   - Simple reverb?
-- More filters (Based on DSPFilters by vinniefalco, all optional)
-  - `filter::rdj`
-  - `filter::butterworth`
-  - `filter::chebyshev1`
-  - `filter::chebyshev2`
-  - `filter::elliptic`
-  - `filter::bessel`
-  - `filter::legendre`
-  - `mod cascade`
-    - All optional filters under `mod filter` are direct implementations
-    - Use of cascading filters allows for large-order, user-defined filters
-- Analysis components? (e.g. `LeakyIntegrator`, `PeakDetector`)
-- Formant filter under `mod filter`
-- ADSR evenlope under `mod envelope`
-  - Other evenlope types
-- Vector-based processing? (`tick(&[f32])`)
+- Formant filter
+- `mod envelope`
+  - `Adsr`
+  - `Ahdsr`
+  - Others?
+- FFI
+- Slice-based processing? (`tick(&[f32])`)
 - Generators (see `stk::Generator`)
 - Pluck-string model (see `stk::Twang`)
 - Voice management? (see `stk::Voicer`)
