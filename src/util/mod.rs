@@ -1,6 +1,6 @@
 /// Converts a sample value to a dBFS value.
 ///
-/// If the sample is really small, or if the sample is `NaN` or infinite, it
+/// If the sample value is really small, or if the sample is not finite, it
 /// will be assumed to be -120dBFS.
 pub fn to_db(sample: f32) -> f32 {
   if sample > 1e-6f32 && sample.is_finite() {
@@ -13,8 +13,8 @@ pub fn to_db(sample: f32) -> f32 {
 
 /// Converts a dBFS value to a sample value.
 ///
-/// If the value is equal to or less than -120dBFS, or if the sample is `NaN`
-/// or infinite, the sample value will be zero.
+/// If the value is equal to or less than -120dBFS, or if the value is not
+/// finite, the sample value will be zero.
 pub fn to_sample(db_value: f32) -> f32 {
   if db_value > -120f32 && db_value.is_finite() {
     10f32.powf(db_value / 20f32)

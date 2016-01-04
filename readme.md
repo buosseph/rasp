@@ -25,6 +25,8 @@ Features and components I'd like to add in the future.
     be included or just the more appropriate form?
   - Either way, update `rbj` filters to use transposed direct-form 2
 - `AllpassDelay`, an all-pass interpolating delay-line (see `stk::DelayA`)
+- Slice-based processing (`tick(&[f32])`)
+- FFI
 - More filters (Based on DSPFilters by vinniefalco, all optional)
   - `filter::butterworth`
   - `filter::chebyshev1`
@@ -40,12 +42,10 @@ Features and components I'd like to add in the future.
   - PitchShifter
   - Echo
   - Simple reverb?
-- Formant filter
 - `mod envelope`
   - `Adsr`
   - `Ahdsr`
   - Others?
-- FFI
-- Slice-based processing? (`tick(&[f32])`)
+- Formant filter
 - `mod generator` (see `stk::Generator`)
 - Pluck-string model (see `stk::Twang`)

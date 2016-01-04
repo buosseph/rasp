@@ -31,7 +31,7 @@ impl FloatConst for f64 {
 ///
 /// The definition of a general `Filter` in DSP is different from the common
 /// audio filter, such as a low-pass filter, you may already be familiar with.
-/// A `Filter` represents a linear time-invariant system, that processes an
+/// A `Filter` represents a linear time-invariant system that processes an
 /// input signal.
 pub trait Filter<T: Float> {
   /// Processes and stores input sample into memory and outputs calculated

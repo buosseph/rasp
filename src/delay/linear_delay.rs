@@ -76,7 +76,7 @@ impl<T> LinearDelay<T> where T: Float {
     self.memory.resize(delay + 1, num::zero());
   }
 
-  /// Returns the maximum delay-line lenght, in samples.
+  /// Returns the maximum delay-line length, in samples.
   pub fn get_max_delay(&self) -> usize {
     self.memory.len() - 1
   }

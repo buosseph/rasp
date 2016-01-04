@@ -70,7 +70,7 @@ impl<T> Delay<T> where T: Float {
     }
   }
 
-  /// Returns the maximum delay-line lenght, in samples.
+  /// Returns the maximum delay-line length, in samples.
   pub fn get_max_delay(&self) -> usize {
     self.memory.len() - 1
   }
