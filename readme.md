@@ -12,18 +12,7 @@ The design, and general usage, of this library is greatly influenced by [The Syn
 ### Future Additions
 Features and components I'd like to add in the future.
 
-- Add other biquad transposed direct-form 2
-  - Current `Biquad` is of direct-from 1
-    - Which is better for fixed point impls due to no possibility of overflow
-  - Transposed direct-form 2
-    - Better for floating point impls due to less memory
-    - Does allow overflow, but that's mitigated by the use of floating point types
-    - Transposed is more suited for floating point because it reduces the difference
-      intermediate sums, which results in more accurate calculations
-      - `out = in * b0 + z1; z1 = in * b1 + z2 - a1 * out; z2 = in * b2 - a2 * out;`
-  - Because this crate uses floating point input, should both forms
-    be included or just the more appropriate form?
-  - Either way, update `rbj` filters to use transposed direct-form 2
+- Update `rbj` filters to use transposed direct-form 2 biquads
 - `AllpassDelay`, an all-pass interpolating delay-line (see `stk::DelayA`)
 - Slice-based processing (`tick(&[f32])`)
 - FFI

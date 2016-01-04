@@ -1,6 +1,6 @@
 [package]
 name = "rasp"
-version = "0.1.5"
+version = "0.1.6"
 authors = ["Brian Uosseph <brian.uosseph@gmail.com>"]
 
 [dependencies]
