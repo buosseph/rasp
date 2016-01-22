@@ -21,7 +21,8 @@ Features and components I'd like to add in the future.
 - Slice-based processing (`process_block(&[f32])`)
 - FFI
 - `mod window`
-  - Implement a bunch of window functions
+  - See if window functions can be used as iterators?
+    - Example `for window in signal.windows(size).window_function(Bartlett) { ... }`
 - More filters (Based on DSPFilters by vinniefalco, all optional)
   - `filter::butterworth`
   - `filter::chebyshev1`
