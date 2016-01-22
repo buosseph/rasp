@@ -13,9 +13,15 @@ The design, and general usage, of this library is greatly influenced by [The Syn
 Features and components I'd like to add in the future.
 
 - Update `rbj` filters to use transposed direct-form 2 biquads
+- Add general `EnvelopeDetector`?
+  - Must warn in documentation that input must be absolute values
+  - An example of when this is used is for gain changing in compressors
+    - This is where the attack and release of the gain comes from
 - `AllpassDelay`, an all-pass interpolating delay-line (see `stk::DelayA`)
-- Slice-based processing (`tick(&[f32])`)
+- Slice-based processing (`process_block(&[f32])`)
 - FFI
+- `mod window`
+  - Implement a bunch of window functions
 - More filters (Based on DSPFilters by vinniefalco, all optional)
   - `filter::butterworth`
   - `filter::chebyshev1`

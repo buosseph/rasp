@@ -3,6 +3,7 @@
 /// If the sample value is really small, or if the sample is not finite, it
 /// will be assumed to be -120dBFS.
 pub fn to_db(sample: f32) -> f32 {
+  debug_assert!(!sample.is_sign_negative());
   if sample > 1e-6f32 && sample.is_finite() {
     20f32 * sample.log10()
   }
@@ -59,7 +60,11 @@ mod tests {
     /* Beyond 0db */
     /* Same issue as above */
     // assert!((1.12202f32.to_db() - 1f32).abs() < EPSILON);
+  }
 
+  #[test]
+  #[should_panic]
+  fn paniced_conversion_to_decibels() {
     /* Invalid input */
     assert!((to_db(NAN) - -120f32).abs() < EPSILON);
     assert!((to_db(INFINITY) - -120f32).abs() < EPSILON);
