@@ -5,3 +5,4 @@ pub mod filter;
 pub mod delay;
 pub mod traits;
 pub mod util;
+pub mod window;
