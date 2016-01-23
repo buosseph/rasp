@@ -1,14 +1,20 @@
+use num;
+use num::traits::Float;
+
+use traits::FloatConst;
+
 /// Converts a sample value to a dBFS value.
 ///
 /// If the sample value is really small, or if the sample is not finite, it
 /// will be assumed to be -120dBFS.
-pub fn to_db(sample: f32) -> f32 {
+pub fn to_db<T: Float + FloatConst>(sample: T) -> T {
   debug_assert!(!sample.is_sign_negative());
-  if sample > 1e-6f32 && sample.is_finite() {
-    20f32 * sample.log10()
+  if sample > num::cast(1e-6f64).unwrap() && sample.is_finite() {
+    let twenty: T = num::cast(20f64).unwrap();
+    twenty * sample.log10()
   }
   else {
-    -120f32
+    num::cast(-120f64).unwrap()
   }
 }
 
@@ -16,12 +22,14 @@ pub fn to_db(sample: f32) -> f32 {
 ///
 /// If the value is equal to or less than -120dBFS, or if the value is not
 /// finite, the sample value will be zero.
-pub fn to_sample(db_value: f32) -> f32 {
-  if db_value > -120f32 && db_value.is_finite() {
-    10f32.powf(db_value / 20f32)
+pub fn to_sample<T: Float + FloatConst>(db_value: T) -> T {
+  if db_value > num::cast(-120f64).unwrap() && db_value.is_finite() {
+    let ten   : T = num::cast(10f64).unwrap();
+    let twenty: T = num::cast(20f64).unwrap();
+    ten.powf(db_value / twenty)
   }
   else {
-    0f32
+    num::zero()
   }
 }
 
