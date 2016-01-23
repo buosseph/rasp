@@ -4,10 +4,8 @@
 
 An audio signal processing library in Rust.
 
-This is a side project for me to learn, and implement, various DSP concepts.
-
 ## Design
-The design, and general usage, of this library is greatly influenced by [The Synthesis Toolkit](https://ccrma.stanford.edu/software/stk/index.html) which is hosted by CCRMA and written in C++. All components implement a `tick` function, which take an audio sample to process and returns some output.
+The design, and general usage, of this library is influenced by [The Synthesis Toolkit](https://ccrma.stanford.edu/software/stk/index.html) which is hosted by CCRMA and written in C++. All components implement a `tick` function, which take an audio sample to process and returns some output.
 
 ### Future Additions
 Features and components I'd like to add in the future.
@@ -20,9 +18,6 @@ Features and components I'd like to add in the future.
 - `AllpassDelay`, an all-pass interpolating delay-line (see `stk::DelayA`)
 - Slice-based processing (`process_block(&[f32])`)
 - FFI
-- `mod window`
-  - See if window functions can be used as iterators?
-    - Example `for window in signal.windows(size).window_function(Bartlett) { ... }`
 - More filters (Based on DSPFilters by vinniefalco, all optional)
   - `filter::butterworth`
   - `filter::chebyshev1`

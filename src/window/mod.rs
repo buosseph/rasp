@@ -1,7 +1,20 @@
-use std::f32::consts::PI;
+mod bartlett;
+mod blackman;
+mod blackman_harris;
+mod hamming;
+mod hann;
+mod triangular;
 
-const BLACKMAN_COEFFS: [f32; 3] = [(1f32 - 0.16f32)/2f32, 0.5f32, 0.16f32/2f32];
-const BLACKMAN_HARRIS_COEFFS: [f32; 4] = [0.35875f32, 0.48829f32, 0.14128f32, 0.01168f32];
+pub use self::bartlett::BartlettIter               as BartlettIter;
+pub use self::blackman::BlackmanIter               as BlackmanIter;
+pub use self::blackman_harris::BlackmanHarrisIter  as BlackmanHarrisIter;
+pub use self::hamming::HammingIter                 as HammingIter;
+pub use self::hann::HannIter                       as HannIter;
+pub use self::triangular::TriangularIter           as TriangularIter;
+
+use num::traits::Float;
+
+use traits::FloatConst;
 
 /// A window function
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -16,147 +29,58 @@ pub enum Window {
   Hann,
   /// A Hamming window
   Hamming,
-  /// A Blackman window where `alpha = 0.16`
+  /// A Blackman window, where `alpha = 0.16`
   Blackman,
   /// A Blakcman-Harris window
   BlackmanHarris
 }
 
-fn gen_triangular_window(index: usize, block_size: usize) -> f32 {
-  let size_minus_one = block_size - 1;
-  let alpha = (size_minus_one as f32) / 2f32;
-  let numerator = (index as f32) - alpha;
-  let denominator = (block_size as f32) / 2f32;
-
-  1f32 - (numerator / denominator).abs()
-}
-
-fn gen_bartlett_window(index: usize, block_size: usize) -> f32 {
-  let size_minus_one = block_size - 1;
-  let alpha = (size_minus_one as f32) / 2f32;
-  let numerator = (index as f32) - alpha;
-
-  1f32 - (numerator / alpha).abs()
-}
-
-fn gen_hann_window(index: usize, block_size: usize) -> f32 {
-  let numerator = 2f32 * PI * (index as f32);
-  let denominator = (block_size - 1) as f32;
-
-  0.5f32 * (1f32 - (numerator / denominator).cos())
-}
-
-fn gen_hamming_window(index: usize, block_size: usize) -> f32 {
-  let alpha = 0.54f32;
-  let beta = 1f32 - alpha;
-  let numerator = 2f32 * PI * (index as f32);
-  let denominator = (block_size - 1) as f32;
-
-  alpha - beta * (numerator / denominator).cos()
-}
-
-fn gen_blackman_window(index: usize, block_size: usize) -> f32 {
-  let theta = 2f32 * PI * (index as f32) / ((block_size - 1) as f32);
-  let a0 = BLACKMAN_COEFFS[0];
-  let a1 = BLACKMAN_COEFFS[1];
-  let a2 = BLACKMAN_COEFFS[2];
-
-  a0 - a1 * (theta).cos() + a2 * (2f32 * theta).cos()
-}
-
-fn gen_blackman_hariss_window(index: usize, block_size: usize) -> f32 {
-  let theta = 2f32 * PI * (index as f32) / ((block_size - 1) as f32);
-  let a0 = BLACKMAN_HARRIS_COEFFS[0];
-  let a1 = BLACKMAN_HARRIS_COEFFS[1];
-  let a2 = BLACKMAN_HARRIS_COEFFS[2];
-  let a3 = BLACKMAN_HARRIS_COEFFS[3];
-
-  a0 - a1 * (theta).cos() + a2 * (2f32 * theta).cos() - a3 * (3f32 * theta).cos()
-}
-
-/// Returns a vector a values following the provided window function.
-pub fn generate_window(window: Window, size: usize) -> Vec<f32> {
-  let mut samples = vec![1f32; size];
-
+/// Applies a window, of the same size, to the given slice of samples.
+pub fn apply_window<T: Float + FloatConst>(samples: &mut [T], window: Window) {
   match window {
     Window::Rectangular => {},
     Window::Triangular => {
-      for (i, sample) in samples.iter_mut().enumerate() {
-        *sample = gen_triangular_window(i, size);
+      let window = TriangularIter::<T>::new(samples.len());
+      for (sample, window_gain) in samples.iter_mut().zip(window) {
+        *sample = window_gain * *sample;
       }
     },
     Window::Bartlett => {
-      for (i, sample) in samples.iter_mut().enumerate() {
-        *sample = gen_bartlett_window(i, size);
+      let window = BartlettIter::<T>::new(samples.len());
+      for (sample, window_gain) in samples.iter_mut().zip(window) {
+        *sample = window_gain * *sample;
       }
     }
     Window::Hann => {
-      for (i, sample) in samples.iter_mut().enumerate() {
-        *sample = gen_hann_window(i, size);
+      let window = HannIter::<T>::new(samples.len());
+      for (sample, window_gain) in samples.iter_mut().zip(window) {
+        *sample = window_gain * *sample;
       }
     },
     Window::Hamming => {
-      for (i, sample) in samples.iter_mut().enumerate() {
-        *sample = gen_hamming_window(i, size);
+      let window = HammingIter::<T>::new(samples.len());
+      for (sample, window_gain) in samples.iter_mut().zip(window) {
+        *sample = window_gain * *sample;
       }
     },
     Window::Blackman => {
-      for (i, sample) in samples.iter_mut().enumerate() {
-        *sample = gen_blackman_window(i, size);
+      let window = BlackmanIter::<T>::new(samples.len());
+      for (sample, window_gain) in samples.iter_mut().zip(window) {
+        *sample = window_gain * *sample;
       }
     },
     Window::BlackmanHarris => {
-      for (i, sample) in samples.iter_mut().enumerate() {
-        *sample = gen_blackman_hariss_window(i, size);
-      }
-    }
-  }
-
-  samples
-}
-
-/// Applies a window function to the given slice of samples.
-pub fn apply_window(samples: &mut [f32], window: Window) {
-  let block_size = samples.len();
-  match window {
-    Window::Rectangular => {},
-    Window::Triangular => {
-      for (i, sample) in samples.iter_mut().enumerate() {
-        *sample = gen_triangular_window(i, block_size) * *sample;
-      }
-    },
-    Window::Bartlett => {
-      for (i, sample) in samples.iter_mut().enumerate() {
-        *sample = gen_bartlett_window(i, block_size) * *sample;
-      }
-    }
-    Window::Hann => {
-      for (i, sample) in samples.iter_mut().enumerate() {
-        *sample = gen_hann_window(i, block_size) * *sample;
-      }
-    },
-    Window::Hamming => {
-      for (i, sample) in samples.iter_mut().enumerate() {
-        *sample = gen_hamming_window(i, block_size) * *sample;
-      }
-    },
-    Window::Blackman => {
-      for (i, sample) in samples.iter_mut().enumerate() {
-        *sample = gen_blackman_window(i, block_size) * *sample;
-      }
-    },
-    Window::BlackmanHarris => {
-      for (i, sample) in samples.iter_mut().enumerate() {
-        *sample = gen_blackman_hariss_window(i, block_size) * *sample;
+      let window = BlackmanHarrisIter::<T>::new(samples.len());
+      for (sample, window_gain) in samples.iter_mut().zip(window) {
+        *sample = window_gain * *sample;
       }
     }
   }
 }
 
 #[cfg(test)]
-mod tests {
+mod apply_window {
   use super::*;
-  use std::f32::EPSILON;
 
   #[test]
   fn rectangular() {
@@ -179,14 +103,6 @@ mod tests {
     for (signal, expected) in cases.iter_mut().zip(results.iter()) {
       apply_window(&mut *signal, window);
       for (actual, expected) in signal.iter().zip(expected.iter()) {
-        println!("{:.6} - {:.6} = {:.6}", expected, actual, expected - actual);
-        assert!((expected - actual).abs() < 1e-6f32);
-      }
-    }
-
-    for signal in results.iter() {
-      let samples = generate_window(window, signal.len());
-      for (actual, expected) in signal.iter().zip(samples.iter()) {
         println!("{:.6} - {:.6} = {:.6}", expected, actual, expected - actual);
         assert!((expected - actual).abs() < 1e-6f32);
       }
@@ -224,14 +140,6 @@ mod tests {
         assert!((expected - actual).abs() < 1e-6f32);
       }
     }
-
-    for signal in results.iter() {
-      let samples = generate_window(window, signal.len());
-      for (actual, expected) in signal.iter().zip(samples.iter()) {
-        println!("{:.6} - {:.6} = {:.6}", expected, actual, expected - actual);
-        assert!((expected - actual).abs() < 1e-6f32);
-      }
-    }
   }
 
   // Values are from octave's `bartlett` function
@@ -256,14 +164,6 @@ mod tests {
     for (signal, expected) in cases.iter_mut().zip(results.iter()) {
       apply_window(&mut *signal, window);
       for (actual, expected) in signal.iter().zip(expected.iter()) {
-        println!("{:.6} - {:.6} = {:.6}", expected, actual, expected - actual);
-        assert!((expected - actual).abs() < 1e-6f32);
-      }
-    }
-
-    for signal in results.iter() {
-      let samples = generate_window(window, signal.len());
-      for (actual, expected) in signal.iter().zip(samples.iter()) {
         println!("{:.6} - {:.6} = {:.6}", expected, actual, expected - actual);
         assert!((expected - actual).abs() < 1e-6f32);
       }
@@ -296,14 +196,6 @@ mod tests {
         assert!((expected - actual).abs() < 1e-6f32);
       }
     }
-
-    for signal in results.iter() {
-      let samples = generate_window(window, signal.len());
-      for (actual, expected) in signal.iter().zip(samples.iter()) {
-        println!("{:.6} - {:.6} = {:.6}", expected, actual, expected - actual);
-        assert!((expected - actual).abs() < 1e-6f32);
-      }
-    }
   }
 
   // Values are from octave's `hamming` function
@@ -332,14 +224,6 @@ mod tests {
         assert!((expected - actual).abs() < 1e-6f32);
       }
     }
-
-    for signal in results.iter() {
-      let samples = generate_window(window, signal.len());
-      for (actual, expected) in signal.iter().zip(samples.iter()) {
-        println!("{:.6} - {:.6} = {:.6}", expected, actual, expected - actual);
-        assert!((expected - actual).abs() < 1e-6f32);
-      }
-    }
   }
 
   #[test]
@@ -363,14 +247,6 @@ mod tests {
     for (signal, expected) in cases.iter_mut().zip(results.iter()) {
       apply_window(&mut *signal, window);
       for (actual, expected) in signal.iter().zip(expected.iter()) {
-        println!("{:.6} - {:.6} = {:.6}", expected, actual, expected - actual);
-        assert!((expected - actual).abs() < 1e-6f32);
-      }
-    }
-
-    for signal in results.iter() {
-      let samples = generate_window(window, signal.len());
-      for (actual, expected) in signal.iter().zip(samples.iter()) {
         println!("{:.6} - {:.6} = {:.6}", expected, actual, expected - actual);
         assert!((expected - actual).abs() < 1e-6f32);
       }
@@ -404,14 +280,6 @@ mod tests {
     for (signal, expected) in cases.iter_mut().zip(results.iter()) {
       apply_window(&mut *signal, window);
       for (actual, expected) in signal.iter().zip(expected.iter()) {
-        println!("{:.6} - {:.6} = {:.6}", expected, actual, expected - actual);
-        assert!((expected - actual).abs() < 1e-6f32);
-      }
-    }
-
-    for signal in results.iter() {
-      let samples = generate_window(window, signal.len());
-      for (actual, expected) in signal.iter().zip(samples.iter()) {
         println!("{:.6} - {:.6} = {:.6}", expected, actual, expected - actual);
         assert!((expected - actual).abs() < 1e-6f32);
       }
