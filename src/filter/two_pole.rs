@@ -57,8 +57,7 @@ impl<T> TwoPole<T> where T: Float {
 
 impl<T> Filter<T> for TwoPole<T> where T: Float {
   fn tick(&mut self, sample: T) -> T {
-    let output = self.b0 * sample
-      - self.a1 * self.y_z1 - self.a2 * self.y_z2;
+    let output = self.b0 * sample - self.a1 * self.y_z1 - self.a2 * self.y_z2;
     self.y_z2 = self.y_z1;
     self.y_z1 = output;
     output

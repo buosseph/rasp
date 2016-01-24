@@ -1,7 +1,7 @@
 use std;
 use num::traits::Float;
 
-/// Necessary floating point constants
+/// Common floating point constants
 pub trait FloatConst {
   fn pi() -> Self;
   fn two() -> Self;
@@ -27,7 +27,7 @@ impl FloatConst for f64 {
   }
 }
 
-/// Represents a audio DSP filter.
+/// An audio DSP filter.
 ///
 /// The definition of a general `Filter` in DSP is different from the common
 /// audio filter, such as a low-pass filter, you may already be familiar with.
@@ -38,14 +38,14 @@ pub trait Filter<T: Float> {
   /// sample.
   fn tick(&mut self, sample: T) -> T;
 
-  /// Resets memory of all previous input and output to zero.
+  /// Returns the last computed output sample.
   fn last_out(&self) -> T;
 
-  /// Returns the last computed output sample.
+  /// Resets memory of all previous input and output to zero.
   fn clear(&mut self);
 }
 
-/// Represents a tappable delay line.
+/// A tappable delay line.
 ///
 /// A tappable delay line is able to access samples at a specified offset
 /// from the internal write pointer.

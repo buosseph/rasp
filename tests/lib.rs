@@ -41,7 +41,8 @@ mod api {
       OneZero,
       TwoPole,
       TwoZero,
-      Biquad
+      Biquad1,
+      Biquad2
     };
 
     // No component here should alter the input until coefficients are set
@@ -71,8 +72,14 @@ mod api {
     }
 
     #[test]
-    fn biquad() {
-      let mut biquad  = Biquad::new();
+    fn biquad1() {
+      let mut biquad  = Biquad1::new();
+      assert!((biquad.tick(1f32) - 1f32).abs() < EPSILON);
+    }
+
+    #[test]
+    fn biquad2() {
+      let mut biquad  = Biquad2::new();
       assert!((biquad.tick(1f32) - 1f32).abs() < EPSILON);
     }
 

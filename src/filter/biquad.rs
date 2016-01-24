@@ -1,3 +1,5 @@
+//! A biquad is a second-order recursive filter.
+
 use num;
 use num::traits::Float;
 
@@ -17,7 +19,6 @@ use traits::Filter;
 
 /// A biquad filter in direct from 1.
 ///
-/// A `Biquad` is a second-order recursive filter.
 /// This implementation uses a [Direct Form I](https://en.wikipedia.org/wiki/Digital_biquad_filter#Direct_Form_1)
 /// realization using the following equation:
 ///
@@ -25,7 +26,7 @@ use traits::Filter;
 ///
 /// It has two feedforward coefficients, `b1` and `b2`, and two feedback
 /// coefficients, `a1` and `a2`.
-pub struct Biquad<T> {
+pub struct Biquad1<T> {
   x_z1: T,
   x_z2: T,
   y_z1: T,
@@ -37,8 +38,8 @@ pub struct Biquad<T> {
   pub a2: T
 }
 
-impl<T> Biquad<T> where T: Float {
-  /// Creates a new `Biquad` filter.
+impl<T> Biquad1<T> where T: Float {
+  /// Creates a new `Biquad1` filter.
   ///
   /// The filter will be initalized in a state that does not alter the input
   /// signal.
@@ -47,15 +48,15 @@ impl<T> Biquad<T> where T: Float {
   ///
   /// ```
   /// # #![allow(unused_mut)]
-  /// use rasp::filter::Biquad;
+  /// use rasp::filter::Biquad1;
   ///
-  /// let mut filter1: Biquad<f32> = Biquad::new();
-  /// let mut filter2: Biquad<f64> = Biquad::new();
-  /// let mut filter3 = Biquad::<f32>::new();
-  /// let mut filter4 = Biquad::<f64>::new();
+  /// let mut filter1: Biquad1<f32> = Biquad1::new();
+  /// let mut filter2: Biquad1<f64> = Biquad1::new();
+  /// let mut filter3 = Biquad1::<f32>::new();
+  /// let mut filter4 = Biquad1::<f64>::new();
   /// ```
   pub fn new() -> Self {
-    Biquad {
+    Biquad1 {
       x_z1: num::zero(),
       x_z2: num::zero(),
       y_z1: num::zero(),
@@ -81,7 +82,7 @@ impl<T> Biquad<T> where T: Float {
   }
 }
 
-impl<T> Filter<T> for Biquad<T> where T: Float {
+impl<T> Filter<T> for Biquad1<T> where T: Float {
   fn tick(&mut self, sample: T) -> T {
     let output = self.b0 * sample
       + self.b1 * self.x_z1 + self.b2 * self.x_z2
@@ -188,7 +189,7 @@ impl<T> Filter<T> for Biquad2<T> where T: Float {
 }
 
 #[cfg(test)]
-mod tests {
+mod form1 {
   use super::*;
   use std::f32::EPSILON;
   use ::traits::Filter;
@@ -204,7 +205,38 @@ mod tests {
         -0.251_900_000_000f32,
          0.098_930_000_000f32
       ];
-    let mut biquad = Biquad::new();
+    let mut biquad = Biquad1::new();
+    for sample in input.iter() {
+      assert!((biquad.tick(*sample) - sample).abs() < EPSILON);
+    }
+    biquad.clear();
+    biquad.set_coefficients(0.5f32, 0.4f32, 0.3f32, 0.2f32, 0.1f32);
+    for i in 0..input.len() {
+      let output = biquad.tick(input[i]);
+      println!("{:.12} - {:.12} = {:.12}", expected[i], output, expected[i] - output);
+      assert!((expected[i] - output).abs() < EPSILON);
+    }
+  }
+}
+
+#[cfg(test)]
+mod form2 {
+  use super::*;
+  use std::f32::EPSILON;
+  use ::traits::Filter;
+
+  #[test]
+  fn tick() {
+    let input = vec![0.55f32, -0.55f32, 0.55f32, -0.55f32, 0.25f32];
+    let expected =
+      vec![
+         0.275_000_000_000f32,
+        -0.110_000_000_000f32,
+         0.214_500_000_000f32,
+        -0.251_900_000_000f32,
+         0.098_930_000_000f32
+      ];
+    let mut biquad = Biquad2::new();
     for sample in input.iter() {
       assert!((biquad.tick(*sample) - sample).abs() < EPSILON);
     }

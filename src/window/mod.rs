@@ -36,6 +36,10 @@ pub enum Window {
 }
 
 /// Applies a window, of the same size, to the given slice of samples.
+///
+/// This uses the available iterators to generate the window. If you need to
+/// apply a window that is not of the same slice, then use the corresponding
+/// window iterator and apply the window manually.
 pub fn apply_window<T: Float + FloatConst>(samples: &mut [T], window: Window) {
   match window {
     Window::Rectangular => {},

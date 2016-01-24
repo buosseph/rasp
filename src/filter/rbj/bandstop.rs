@@ -1,26 +1,26 @@
 use num::traits::Float;
 
-use filter::Biquad;
+use filter::Biquad2;
 use traits::{Filter, FloatConst};
 
 /// A band-stop biquad filter.
 ///
 /// Also known as a band-reject, or notch, filter.
 pub struct BandStop<T> {
-  biquad: Biquad<T>
+  biquad: Biquad2<T>
 }
 
 impl<T> BandStop<T> where T: Float + FloatConst {
   /// Creates a new `BandStop` biquad filter.
   pub fn new() -> Self {
     BandStop {
-      biquad: Biquad::<T>::new()
+      biquad: Biquad2::<T>::new()
     }
   }
 
   /// Set filter coefficients.
   ///
-  /// `Biquad` coefficients are calculated from the `sample_rate`,
+  /// `Biquad2` coefficients are calculated from the `sample_rate`,
   /// `center_frequency`, `db_gain`, and `q` factor. These values are not
   /// validated.
   // TODO: Explain value ranges of parameters

@@ -1,24 +1,24 @@
 use num::traits::Float;
 
-use filter::Biquad;
+use filter::Biquad2;
 use traits::{Filter, FloatConst};
 
 /// An all-pass biquad filter.
 pub struct AllPass<T> {
-  biquad: Biquad<T>
+  biquad: Biquad2<T>
 }
 
 impl<T> AllPass<T> where T: Float + FloatConst {
   /// Creates a new `AllPass` biquad filter.
   pub fn new() -> Self {
     AllPass {
-      biquad: Biquad::<T>::new()
+      biquad: Biquad2::<T>::new()
     }
   }
 
   /// Set filter coefficients.
   ///
-  /// `Biquad` coefficients are calculated from the `sample_rate`,
+  /// `Biquad2` coefficients are calculated from the `sample_rate`,
   /// `phase_frequency`, and `q` factor. These values are not
   /// validated.
   // TODO: Explain value ranges of parameters

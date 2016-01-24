@@ -1,24 +1,24 @@
 use num::traits::Float;
 
-use filter::Biquad;
+use filter::Biquad2;
 use traits::{Filter, FloatConst};
 
 /// A high-pass biquad filter.
 pub struct HighPass<T> {
-  biquad: Biquad<T>
+  biquad: Biquad2<T>
 }
 
 impl<T> HighPass<T> where T: Float + FloatConst {
   /// Creates a new `HighPass` biquad filter.
   pub fn new() -> Self {
     HighPass {
-      biquad: Biquad::<T>::new()
+      biquad: Biquad2::<T>::new()
     }
   }
 
   /// Set filter coefficients.
   ///
-  /// `Biquad` coefficients are calculated from the `sample_rate`,
+  /// `Biquad2` coefficients are calculated from the `sample_rate`,
   /// `cutoff_frequency`, and `q` factor. These values are not
   /// validated.
   // TODO: Explain value ranges of parameters

@@ -33,6 +33,15 @@ pub fn to_sample<T: Float + FloatConst>(db_value: T) -> T {
   }
 }
 
+/// Applys a gain to a sample value.
+///
+/// This includes a `debug_assert!` to check if the gain is a valid ratio.
+#[inline]
+pub fn apply_gain<T: Float>(sample: T, ratio: T) -> T {
+  debug_assert!(ratio.is_finite() && !ratio.is_sign_negative());
+  sample * ratio
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;
@@ -56,14 +65,15 @@ mod tests {
     assert!((to_db(1e-6f32) - -120f32).abs() < EPSILON);
 
     /* Halving in decibels */
-    /* All correct, but this way of testing is too accurate */
-    // assert!((0.841395f32.to_db() - -1.5f32).abs() < 1e-5f32);
-    // assert!((0.707946f32.to_db() - -3f32).abs() < EPSILON);
-    // assert!((0.501187f32.to_db() - -6f32).abs() < EPSILON);
-    // assert!((0.251189f32.to_db() - -12f32).abs() < EPSILON);
-    // assert!((0.0630957f32.to_db() - -24f32).abs() < EPSILON);
-    // assert!((0.00398107f32.to_db() - -48f32).abs() < EPSILON);
-    // assert!((0.00000158489f32.to_db() - -96f32).abs() < EPSILON);
+    /* All seem correct, but this way of testing is too accurate,
+       or the conversion too inaccurate */
+    // assert!((to_db(0.841395f32) - -1.5f32).abs() < 1e-4f32);
+    // assert!((to_db(0.707946f32) - -3f32).abs() < 1e-4f32);
+    // assert!((to_db(0.501187f32) - -6f32).abs() < 1e-4f32);
+    // assert!((to_db(0.251189f32) - -12f32).abs() < 1e-4f32);
+    // assert!((to_db(0.0630957f32) - -24f32).abs() < 1e-4f32);
+    // assert!((to_db(0.00398107f32) - -48f32).abs() < 1e-4f32);
+    // assert!((to_db(0.00000158489f32) - -96f32).abs() < 1e-4f32);
 
     /* Beyond 0db */
     /* Same issue as above */

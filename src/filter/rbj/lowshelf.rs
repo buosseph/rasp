@@ -1,25 +1,25 @@
 use num;
 use num::traits::Float;
 
-use filter::Biquad;
+use filter::Biquad2;
 use traits::{Filter, FloatConst};
 
 /// A low-shelf biquad filter.
 pub struct LowShelf<T> {
-  biquad: Biquad<T>
+  biquad: Biquad2<T>
 }
 
 impl<T> LowShelf<T> where T: Float + FloatConst {
   /// Creates a new `LowShelf` biquad filter.
   pub fn new() -> Self {
     LowShelf {
-      biquad: Biquad::<T>::new()
+      biquad: Biquad2::<T>::new()
     }
   }
 
   /// Set filter coefficients.
   ///
-  /// `Biquad` coefficients are calculated from the `sample_rate`,
+  /// `Biquad2` coefficients are calculated from the `sample_rate`,
   /// `cutoff_frequency`, `db_gain`, and `shelf_slope` factor. These values
   /// are not validated.
   // TODO: Explain value ranges of parameters

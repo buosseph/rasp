@@ -10,7 +10,6 @@ The design, and general usage, of this library is influenced by [The Synthesis T
 ### Future Additions
 Features and components I'd like to add in the future.
 
-- Update `rbj` filters to use transposed direct-form 2 biquads
 - Add general `EnvelopeDetector`?
   - Must warn in documentation that input must be absolute values
   - An example of when this is used is for gain changing in compressors

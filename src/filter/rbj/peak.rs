@@ -1,25 +1,25 @@
 use num;
 use num::traits::Float;
 
-use filter::Biquad;
+use filter::Biquad2;
 use traits::{Filter, FloatConst};
 
 /// A peaking biquad filter.
 pub struct Peak<T> {
-  biquad: Biquad<T>
+  biquad: Biquad2<T>
 }
 
 impl<T> Peak<T> where T: Float + FloatConst {
   /// Creates a new `Peak` biquad filter.
   pub fn new() -> Self {
     Peak {
-      biquad: Biquad::new()
+      biquad: Biquad2::new()
     }
   }
 
   /// Set filter coefficients.
   ///
-  /// `Biquad` coefficients are calculated from the `sample_rate`,
+  /// `Biquad2` coefficients are calculated from the `sample_rate`,
   /// `center_frequency`, `db_gain`, and `q` factor. These values are not
   /// validated.
   // TODO: Explain value ranges of parameters

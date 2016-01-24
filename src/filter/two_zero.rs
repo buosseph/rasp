@@ -13,8 +13,7 @@ use traits::Filter;
 pub struct TwoZero<T> {
   x_z1: T,
   x_z2: T,
-  // Only necessary for last_out()
-  y_z1: T,
+  output: T,
   pub b0: T,
   pub b1: T,
   pub b2: T
@@ -41,7 +40,7 @@ impl<T> TwoZero<T> where T: Float {
     TwoZero {
       x_z1: num::zero(),
       x_z2: num::zero(),
-      y_z1: num::zero(),
+      output: num::zero(),
       b0: num::one(),
       b1: num::zero(),
       b2: num::zero()
@@ -60,11 +59,10 @@ impl<T> TwoZero<T> where T: Float {
 
 impl<T> Filter<T> for TwoZero<T> where T: Float {
   fn tick(&mut self, sample: T) -> T {
-    self.y_z1 = self.b0 * sample
-      + self.b1 * self.x_z1 + self.b2 * self.x_z2;
+    self.output = self.b0 * sample + self.b1 * self.x_z1 + self.b2 * self.x_z2;
     self.x_z2 = self.x_z1;
     self.x_z1 = sample;
-    self.y_z1
+    self.output
   }
 
   fn clear(&mut self) {
@@ -73,7 +71,7 @@ impl<T> Filter<T> for TwoZero<T> where T: Float {
   }
 
   fn last_out(&self) -> T {
-    self.y_z1
+    self.output
   }
 }
 

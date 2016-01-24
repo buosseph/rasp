@@ -1,6 +1,6 @@
 use num::traits::Float;
 
-use filter::Biquad;
+use filter::Biquad2;
 use traits::{Filter, FloatConst};
 
 /// A band-pass biquad filter.
@@ -8,20 +8,20 @@ use traits::{Filter, FloatConst};
 /// This filter has a constant skirt gain with the peak gain controlled by the
 /// Q factor.
 pub struct BandPass1<T> {
-  biquad: Biquad<T>
+  biquad: Biquad2<T>
 }
 
 impl<T> BandPass1<T> where T: Float + FloatConst {
   /// Creates a new `BandPass1` biquad filter.
   pub fn new() -> Self {
     BandPass1 {
-      biquad: Biquad::<T>::new()
+      biquad: Biquad2::<T>::new()
     }
   }
 
   /// Set filter coefficients.
   ///
-  /// `Biquad` coefficients are calculated from the `sample_rate`,
+  /// `Biquad2` coefficients are calculated from the `sample_rate`,
   /// `center_frequency`, and `q` factor. These values are not
   /// validated.
   // TODO: Explain value ranges of parameters
@@ -73,20 +73,20 @@ impl<T> Filter<T> for BandPass1<T> where T: Float {
 ///
 /// This filter has a constant peak gain at 0db.
 pub struct BandPass2<T> {
-  biquad: Biquad<T>
+  biquad: Biquad2<T>
 }
 
 impl<T> BandPass2<T> where T: Float + FloatConst {
   /// Creates a new `BandPass2` biquad filter.
   pub fn new() -> Self {
     BandPass2 {
-      biquad: Biquad::<T>::new()
+      biquad: Biquad2::<T>::new()
     }
   }
 
   /// Set filter coefficients.
   ///
-  /// `Biquad` coefficients are calculated from the `sample_rate`,
+  /// `Biquad2` coefficients are calculated from the `sample_rate`,
   /// `center_frequency`, and `q` factor. These values are not
   /// validated.
   // TODO: Explain value ranges of parameters
