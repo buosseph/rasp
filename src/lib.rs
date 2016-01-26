@@ -1,4 +1,7 @@
+#![feature(libc)]
+
 extern crate num;
+extern crate libc;
 
 pub mod analysis;
 pub mod filter;

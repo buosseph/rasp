@@ -67,6 +67,63 @@ impl<T> Processor<T> for OnePole<T> where T: Float {
   }
 }
 
+#[allow(dead_code)]
+mod ffi {
+  use super::*;
+  use libc::c_float;
+  use ::traits::Processor;
+
+  #[no_mangle]
+  pub extern fn filter_one_pole_new() -> *mut OnePole<c_float> {
+    // Heap allocation
+    Box::into_raw(Box::new(OnePole::<c_float>::new()))
+  }
+
+  #[no_mangle]
+  pub extern fn filter_one_pole_destroy(ptr: *mut OnePole<c_float>) {
+    if ptr.is_null() { return }
+    unsafe { Box::from_raw(ptr); }
+    // Drop
+  }
+
+  // How do you handle generics in an ffi?
+  #[no_mangle]
+  pub extern fn filter_one_pole_set_coefficients(ptr: *mut OnePole<c_float>, b0: c_float, a1: c_float) {
+    let mut filter = unsafe {
+      assert!(!ptr.is_null());
+      &mut *ptr
+    };
+    filter.set_coefficients(b0, a1);
+  }
+
+  #[no_mangle]
+  pub extern fn filter_one_pole_process(ptr: *mut OnePole<c_float>, sample: c_float) -> c_float {
+    let mut filter = unsafe {
+      assert!(!ptr.is_null());
+      &mut *ptr
+    };
+    filter.process(sample)
+  }
+
+  #[no_mangle]
+  pub extern fn filter_one_pole_clear(ptr: *mut OnePole<c_float>) {
+    let mut filter = unsafe {
+      assert!(!ptr.is_null());
+      &mut *ptr
+    };
+    filter.clear();
+  }
+
+  #[no_mangle]
+  pub extern fn filter_one_pole_last_out(ptr: *mut OnePole<c_float>) -> c_float {
+    let filter = unsafe {
+      assert!(!ptr.is_null());
+      & *ptr
+    };
+    filter.last_out()
+  }
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;
