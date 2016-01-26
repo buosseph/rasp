@@ -11,6 +11,7 @@ use traits::{
 };
 
 /// A time-varying delay line.
+#[repr(C)]
 pub struct Delay<T> {
   memory: Vec<T>,
   output: T,

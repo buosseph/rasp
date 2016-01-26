@@ -7,6 +7,7 @@ use traits::{
 };
 
 /// A time-varying, linear interpolating delay line.
+#[repr(C)]
 pub struct LinearDelay<T> {
   memory: Vec<T>,
   output: T,

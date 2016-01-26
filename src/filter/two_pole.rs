@@ -9,7 +9,8 @@ use traits::Processor;
 ///
 /// `y[n] = b0*x[n] - a1*y[n-1] - a2*x[n-2]`
 ///
-/// It has two feedback coefficients, `a1` and `a2`. 
+/// It has two feedback coefficients, `a1` and `a2`.
+#[repr(C)]
 pub struct TwoPole<T> {
   y_z1: T,
   y_z2: T,

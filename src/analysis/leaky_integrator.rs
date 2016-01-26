@@ -10,6 +10,7 @@ use traits::Processor;
 /// that `a1 = 1 - b0`, as long as `0 <= a1 < 1`. Because of this relationship
 /// the filter equation can be changed to `y[n] = x[n] + a1 * (y[n-1] - x[n])`
 /// and integrator only uses one gain `a1`, or `alpha`.
+#[repr(C)]
 pub struct LeakyIntegrator<T> {
   /// The feedback gain in the integrator (a1)
   alpha: T,

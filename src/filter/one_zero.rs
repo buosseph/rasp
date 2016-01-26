@@ -9,7 +9,8 @@ use traits::Processor;
 ///
 /// `y[n] = b0*x[n] + b1*x[n-1]`
 ///
-/// It has one feedforward coefficient, `b1`. 
+/// It has one feedforward coefficient, `b1`.
+#[repr(C)]
 pub struct OneZero<T: Float> {
   x_z1: T,
   output: T,

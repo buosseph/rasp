@@ -26,6 +26,7 @@ use traits::Processor;
 ///
 /// It has two feedforward coefficients, `b1` and `b2`, and two feedback
 /// coefficients, `a1` and `a2`.
+#[repr(C)]
 pub struct Biquad1<T> {
   x_z1: T,
   x_z2: T,
@@ -115,6 +116,7 @@ impl<T> Processor<T> for Biquad1<T> where T: Float {
 ///
 /// It has two feedforward coefficients, `b1` and `b2`, and two feedback
 /// coefficients, `a1` and `a2`.
+#[repr(C)]
 pub struct Biquad2<T> {
   z1: T,
   z2: T,

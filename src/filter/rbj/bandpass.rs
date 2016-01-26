@@ -7,6 +7,7 @@ use traits::{FloatConst, Processor};
 ///
 /// This filter has a constant skirt gain with the peak gain controlled by the
 /// Q factor.
+#[repr(C)]
 pub struct BandPass1<T> {
   biquad: Biquad2<T>
 }
@@ -72,6 +73,7 @@ impl<T> Processor<T> for BandPass1<T> where T: Float {
 /// A band-pass biquad filter.
 ///
 /// This filter has a constant peak gain at 0db.
+#[repr(C)]
 pub struct BandPass2<T> {
   biquad: Biquad2<T>
 }

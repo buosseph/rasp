@@ -9,7 +9,8 @@ use traits::Processor;
 ///
 /// `y[n] = b0*x[n] - a1*y[n-1]`
 ///
-/// It has one feedback coefficient, `a1`. 
+/// It has one feedback coefficient, `a1`.
+#[repr(C)]
 pub struct OnePole<T: Float> {
   y_z1: T,
   pub b0: T,

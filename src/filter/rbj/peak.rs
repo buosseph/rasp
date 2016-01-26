@@ -5,6 +5,7 @@ use filter::Biquad2;
 use traits::{FloatConst, Processor};
 
 /// A peaking biquad filter.
+#[repr(C)]
 pub struct Peak<T> {
   biquad: Biquad2<T>
 }

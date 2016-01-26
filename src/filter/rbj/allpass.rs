@@ -4,6 +4,7 @@ use filter::Biquad2;
 use traits::{FloatConst, Processor};
 
 /// An all-pass biquad filter.
+#[repr(C)]
 pub struct AllPass<T> {
   biquad: Biquad2<T>
 }

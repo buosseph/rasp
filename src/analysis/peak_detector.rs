@@ -6,6 +6,7 @@ use traits::Processor;
 /// A peak envelope detector.
 ///
 /// [Based on code by Bram](http://musicdsp.org/showArchiveComment.php?ArchiveID=97)
+#[repr(C)]
 pub struct PeakEnvDetector<T> {
   // The alpha, or a1, coefficients used in the integrator
   attack_gain: T,

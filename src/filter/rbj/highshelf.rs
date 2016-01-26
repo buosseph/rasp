@@ -5,6 +5,7 @@ use filter::Biquad2;
 use traits::{FloatConst, Processor};
 
 /// A high-shelf biquad filter.
+#[repr(C)]
 pub struct HighShelf<T> {
   biquad: Biquad2<T>
 }

@@ -10,6 +10,7 @@ use traits::Processor;
 /// `y[n] = b0*x[n] + b1*x[n-1] + b2*x[n-2]`
 ///
 /// It has two feedforward coefficients, `b1` and `b2`.
+#[repr(C)]
 pub struct TwoZero<T> {
   x_z1: T,
   x_z2: T,

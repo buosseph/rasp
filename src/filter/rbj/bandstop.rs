@@ -6,6 +6,7 @@ use traits::{FloatConst, Processor};
 /// A band-stop biquad filter.
 ///
 /// Also known as a band-reject, or notch, filter.
+#[repr(C)]
 pub struct BandStop<T> {
   biquad: Biquad2<T>
 }
