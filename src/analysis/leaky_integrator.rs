@@ -1,7 +1,7 @@
 use num;
 use num::traits::Float;
 
-use traits::Filter;
+use traits::Processor;
 
 /// An integrator used to average a signal.
 /// 
@@ -81,8 +81,8 @@ impl<T> LeakyIntegrator<T> where T: Float {
   }
 }
 
-impl<T> Filter<T> for LeakyIntegrator<T> where T: Float {
-  fn tick(&mut self, value: T) -> T {
+impl<T> Processor<T> for LeakyIntegrator<T> where T: Float {
+  fn process(&mut self, value: T) -> T {
     self.y_z1 = value + self.alpha * (self.y_z1 - value);
     self.y_z1
   }
@@ -100,7 +100,7 @@ impl<T> Filter<T> for LeakyIntegrator<T> where T: Float {
 mod tests {
   use super::*;
   use std::f32::*;
-  use ::traits::Filter;
+  use ::traits::Processor;
 
   #[test]
   fn new() {
@@ -124,7 +124,7 @@ mod tests {
     assert!((integrator.last_out() - 0f32).abs() < EPSILON);
 
     integrator.set_alpha(0.5f32);
-    let mut output = integrator.tick(1f32);
+    let mut output = integrator.process(1f32);
 
     assert!((output - 0.5f32).abs() < EPSILON);
     assert!((integrator.last_out() - 0.5f32).abs() < EPSILON);
@@ -132,20 +132,20 @@ mod tests {
     integrator.clear();
     assert!((integrator.last_out() - 0f32).abs() < EPSILON);
 
-    output = integrator.tick(1f32);
+    output = integrator.process(1f32);
     assert!((output - 0.5f32).abs() < EPSILON);
     assert!((integrator.last_out() - 0.5f32).abs() < EPSILON);
   }
 
   #[test]
-  fn tick() {
+  fn process() {
     let mut integrator = LeakyIntegrator::new();
     let expected = vec![0.5f32, 0.75f32, 0.875f32, 0.9375f32, 0.96875f32];
 
     integrator.set_alpha(0.5f32);
 
     for case in expected.iter() {
-      let output = integrator.tick(1f32);
+      let output = integrator.process(1f32);
       assert!((output - case).abs() < EPSILON);
     }
   }

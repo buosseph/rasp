@@ -12,6 +12,11 @@ pub use self::hamming::HammingIter                 as HammingIter;
 pub use self::hann::HannIter                       as HannIter;
 pub use self::triangular::TriangularIter           as TriangularIter;
 
+/** Notes on windows
+  - The Bartlett/Triangular, Hann, and Hamming windows share a property:
+    - when overlapped 50%, the sum of the windows is uniform (window(x) + window(y) = 1)
+ */
+
 use num::traits::Float;
 
 use traits::FloatConst;

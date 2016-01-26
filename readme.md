@@ -4,10 +4,16 @@
 
 An audio signal processing library in Rust.
 
-## Design
-The design, and general usage, of this library is influenced by [The Synthesis Toolkit](https://ccrma.stanford.edu/software/stk/index.html) which is hosted by CCRMA and written in C++. All components implement a `tick` function, which take an audio sample to process and returns some output.
+The design, and general usage, of this library is based on the [Synthesis Toolkit](https://ccrma.stanford.edu/software/stk/index.html) which is hosted by CCRMA and written in C++.
+
+
+## Usage
+
+All objects intended to process samples of an audio signal implement the `Processor` trait. Samples are passed into the object using `process()` and returns an output sample.
+
 
 ### Future Additions
+
 Features and components I'd like to add in the future.
 
 - Add general `EnvelopeDetector`?
@@ -15,7 +21,6 @@ Features and components I'd like to add in the future.
   - An example of when this is used is for gain changing in compressors
     - This is where the attack and release of the gain comes from
 - `AllpassDelay`, an all-pass interpolating delay-line (see `stk::DelayA`)
-- Slice-based processing (`process_block(&[f32])`)
 - FFI
 - More filters (Based on DSPFilters by vinniefalco, all optional)
   - `filter::butterworth`

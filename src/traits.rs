@@ -1,5 +1,6 @@
-use std;
 use num::traits::Float;
+
+use std;
 
 /// Common floating point constants
 pub trait FloatConst {
@@ -27,22 +28,26 @@ impl FloatConst for f64 {
   }
 }
 
-/// An audio DSP filter.
-///
-/// The definition of a general `Filter` in DSP is different from the common
-/// audio filter, such as a low-pass filter, you may already be familiar with.
-/// A `Filter` represents a linear time-invariant system that processes an
-/// input signal.
-pub trait Filter<T: Float> {
+/// An audio processor.
+pub trait Processor<T: Float> {
   /// Processes and stores input sample into memory and outputs calculated
   /// sample.
-  fn tick(&mut self, sample: T) -> T;
+  fn process(&mut self, sample: T) -> T;
 
-  /// Returns the last computed output sample.
-  fn last_out(&self) -> T;
+  /// Processes a contiguous sequence of samples, calling `process()` on each
+  /// sample.
+  fn process_block(&mut self, samples: &mut [T]) -> T {
+    for sample in samples.iter_mut() {
+      *sample = self.process(*sample);
+    }
+    *samples.last().unwrap()
+  }
 
   /// Resets memory of all previous input and output to zero.
   fn clear(&mut self);
+
+  /// Returns the last computed output sample.
+  fn last_out(&self) -> T;
 }
 
 /// A tappable delay line.

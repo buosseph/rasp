@@ -1,7 +1,7 @@
 use num;
 use num::traits::Float;
 
-use traits::Filter;
+use traits::Processor;
 
 /// A peak envelope detector.
 ///
@@ -109,8 +109,8 @@ impl<T> PeakEnvDetector<T> where T: Float {
   }
 }
 
-impl<T> Filter<T> for PeakEnvDetector<T> where T: Float {
-  fn tick(&mut self, sample: T) -> T {
+impl<T> Processor<T> for PeakEnvDetector<T> where T: Float {
+  fn process(&mut self, sample: T) -> T {
     let input_envelope = sample.abs();
 
     // The amount to feedback into input_envelope
@@ -139,7 +139,7 @@ impl<T> Filter<T> for PeakEnvDetector<T> where T: Float {
 mod tests {
   use super::*;
   use std::f32::*;
-  use ::traits::Filter;
+  use ::traits::Processor;
 
   #[test]
   fn new() {
@@ -180,7 +180,7 @@ mod tests {
     detector.set_attack(0.02f32 * 44100f32);
     detector.set_release(0.2f32 * 44100f32);
 
-    let output = detector.tick(1f32);
+    let output = detector.process(1f32);
     assert!((detector.last_out() - output).abs() < EPSILON);
 
     detector.clear();

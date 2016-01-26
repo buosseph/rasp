@@ -3,7 +3,7 @@
 use num;
 use num::traits::Float;
 
-use traits::Filter;
+use traits::Processor;
 
 /* Notes on biquads
   - A biquad is a recursive second-order IIR filter and is often used as a
@@ -82,8 +82,8 @@ impl<T> Biquad1<T> where T: Float {
   }
 }
 
-impl<T> Filter<T> for Biquad1<T> where T: Float {
-  fn tick(&mut self, sample: T) -> T {
+impl<T> Processor<T> for Biquad1<T> where T: Float {
+  fn process(&mut self, sample: T) -> T {
     let output = self.b0 * sample
       + self.b1 * self.x_z1 + self.b2 * self.x_z2
       - self.a1 * self.y_z1 - self.a2 * self.y_z2;
@@ -169,8 +169,8 @@ impl<T> Biquad2<T> where T: Float {
   }
 }
 
-impl<T> Filter<T> for Biquad2<T> where T: Float {
-  fn tick(&mut self, sample: T) -> T {
+impl<T> Processor<T> for Biquad2<T> where T: Float {
+  fn process(&mut self, sample: T) -> T {
     self.output = self.b0 * sample + self.z1;
     self.z1 = self.b1 * sample + self.z2 - self.a1 * self.output;
     self.z2 = self.b2 * sample - self.a2 * self.output;
@@ -192,10 +192,10 @@ impl<T> Filter<T> for Biquad2<T> where T: Float {
 mod form1 {
   use super::*;
   use std::f32::EPSILON;
-  use ::traits::Filter;
+  use ::traits::Processor;
 
   #[test]
-  fn tick() {
+  fn process() {
     let input = vec![0.55f32, -0.55f32, 0.55f32, -0.55f32, 0.25f32];
     let expected =
       vec![
@@ -206,27 +206,23 @@ mod form1 {
          0.098_930_000_000f32
       ];
     let mut biquad = Biquad1::new();
+
     for sample in input.iter() {
-      assert!((biquad.tick(*sample) - sample).abs() < EPSILON);
+      assert!((biquad.process(*sample) - sample).abs() < EPSILON);
     }
+
     biquad.clear();
     biquad.set_coefficients(0.5f32, 0.4f32, 0.3f32, 0.2f32, 0.1f32);
+
     for i in 0..input.len() {
-      let output = biquad.tick(input[i]);
+      let output = biquad.process(input[i]);
       println!("{:.12} - {:.12} = {:.12}", expected[i], output, expected[i] - output);
       assert!((expected[i] - output).abs() < EPSILON);
     }
   }
-}
-
-#[cfg(test)]
-mod form2 {
-  use super::*;
-  use std::f32::EPSILON;
-  use ::traits::Filter;
 
   #[test]
-  fn tick() {
+  fn process_block() {
     let input = vec![0.55f32, -0.55f32, 0.55f32, -0.55f32, 0.25f32];
     let expected =
       vec![
@@ -236,16 +232,86 @@ mod form2 {
         -0.251_900_000_000f32,
          0.098_930_000_000f32
       ];
-    let mut biquad = Biquad2::new();
-    for sample in input.iter() {
-      assert!((biquad.tick(*sample) - sample).abs() < EPSILON);
-    }
+    let mut biquad = Biquad1::new();
+
+    let mut initial_input = input.clone();
+    let mut last_processed = biquad.process_block(&mut initial_input);
+    assert!((last_processed - input[4]).abs() < EPSILON);
+
     biquad.clear();
     biquad.set_coefficients(0.5f32, 0.4f32, 0.3f32, 0.2f32, 0.1f32);
+
+    let mut actual = input.clone();
+    last_processed = biquad.process_block(&mut actual);
+    assert!((last_processed - expected[4]).abs() < EPSILON);
+
     for i in 0..input.len() {
-      let output = biquad.tick(input[i]);
+      println!("{:.12} - {:.12} = {:.12}", expected[i], actual[i], expected[i] - actual[i]);
+      assert!((expected[i] - actual[i]).abs() < EPSILON);
+    }
+  }
+}
+
+#[cfg(test)]
+mod form2 {
+  use super::*;
+  use std::f32::EPSILON;
+  use ::traits::Processor;
+
+  #[test]
+  fn process() {
+    let input = vec![0.55f32, -0.55f32, 0.55f32, -0.55f32, 0.25f32];
+    let expected =
+      vec![
+         0.275_000_000_000f32,
+        -0.110_000_000_000f32,
+         0.214_500_000_000f32,
+        -0.251_900_000_000f32,
+         0.098_930_000_000f32
+      ];
+    let mut filter = Biquad2::new();
+
+    for sample in input.iter() {
+      assert!((filter.process(*sample) - sample).abs() < EPSILON);
+    }
+
+    filter.clear();
+    filter.set_coefficients(0.5f32, 0.4f32, 0.3f32, 0.2f32, 0.1f32);
+
+    for i in 0..input.len() {
+      let output = filter.process(input[i]);
       println!("{:.12} - {:.12} = {:.12}", expected[i], output, expected[i] - output);
       assert!((expected[i] - output).abs() < EPSILON);
+    }
+  }
+
+  #[test]
+  fn process_block() {
+    let input = vec![0.55f32, -0.55f32, 0.55f32, -0.55f32, 0.25f32];
+    let expected =
+      vec![
+         0.275_000_000_000f32,
+        -0.110_000_000_000f32,
+         0.214_500_000_000f32,
+        -0.251_900_000_000f32,
+         0.098_930_000_000f32
+      ];
+    let mut filter = Biquad2::new();
+
+    let mut initial_input = input.clone();
+    let mut last_processed = filter.process_block(&mut initial_input);
+    assert!((last_processed - input.last().unwrap()).abs() < EPSILON);
+
+    filter.clear();
+    filter.set_coefficients(0.5f32, 0.4f32, 0.3f32, 0.2f32, 0.1f32);
+
+    let mut actual = input.clone();
+    last_processed = filter.process_block(&mut actual);
+    assert!((last_processed - expected.last().unwrap()).abs() < EPSILON);
+
+    for i in 0..input.len() {
+      println!("{:.12} - {:.12} = {:.12}", expected[i], actual[i], expected[i] - actual[i]);
+      assert!((expected[i] - actual[i]).abs() < EPSILON);
     }
   }
 }

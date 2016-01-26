@@ -2,7 +2,7 @@ use num;
 use num::traits::Float;
 
 use traits::{
-  Filter,
+  Processor,
   TappableDelayLine
 };
 
@@ -138,8 +138,8 @@ impl<T> LinearDelay<T> where T: Float {
   }
 }
 
-impl<T> Filter<T> for LinearDelay<T> where T: Float {
-  fn tick(&mut self, sample: T) -> T {
+impl<T> Processor<T> for LinearDelay<T> where T: Float {
+  fn process(&mut self, sample: T) -> T {
     // write input sample into memory
     self.memory[self.write_ptr] = sample;
     self.write_ptr += 1;
@@ -199,7 +199,7 @@ impl<T> TappableDelayLine<T> for LinearDelay<T> where T: Float {
 mod tests {
   use super::*;
   use std::f32::EPSILON;
-  use ::traits::{Filter, TappableDelayLine};
+  use ::traits::{Processor, TappableDelayLine};
 
   #[test]
   fn new() {
@@ -239,14 +239,14 @@ mod tests {
   }
 
   #[test]
-  fn tick() {
+  fn process() {
     // No interpolation case
     let mut input     = vec![0f32; 5];    input[0] = 1f32;
     let mut expected  = vec![0f32; 5]; expected[4] = 1f32;
     let mut delay1    = LinearDelay::<f32>::new(4f32, 4095);
 
     for (i, sample) in input.iter().enumerate() {
-      assert!((expected[i] - delay1.tick(*sample)).abs() < EPSILON);
+      assert!((expected[i] - delay1.process(*sample)).abs() < EPSILON);
     }
 
     // Interpolation case
@@ -256,7 +256,7 @@ mod tests {
     expected[3] = 0.5f32;
 
     for (i, sample) in input.iter().enumerate() {
-      assert!((expected[i] - delay2.tick(*sample)).abs() < EPSILON);
+      assert!((expected[i] - delay2.process(*sample)).abs() < EPSILON);
     }
   }
 
@@ -268,7 +268,7 @@ mod tests {
     let mut delay = LinearDelay::<f32>::new(4f32, 4095);
 
     for sample in input.iter() {
-      delay.tick(*sample);
+      delay.process(*sample);
       assert_eq!(*sample, delay.tap_out(0));
     }
 
@@ -289,7 +289,7 @@ mod tests {
     }
 
     for sample in expected.iter() {
-      assert_eq!(*sample, delay.tick(0f32));
+      assert_eq!(*sample, delay.process(0f32));
     }
   }
 

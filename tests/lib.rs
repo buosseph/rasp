@@ -5,7 +5,7 @@ extern crate rasp;
 mod api {
   mod analysis {
     use std::f32::EPSILON;
-    use rasp::traits::Filter;
+    use rasp::traits::Processor;
     use rasp::analysis::{
       LeakyIntegrator,
       PeakEnvDetector,
@@ -17,25 +17,25 @@ mod api {
     #[test]
     fn leaky_integrator() {
       let mut integrator = LeakyIntegrator::new();
-      assert!((integrator.tick(1f32) - 1f32).abs() < EPSILON);
+      assert!((integrator.process(1f32) - 1f32).abs() < EPSILON);
     }
 
     #[test]
     fn peak_detector() {
       let mut detector = PeakEnvDetector::new();
-      assert!((detector.tick(1f32) - 1f32).abs() < EPSILON);
+      assert!((detector.process(1f32) - 1f32).abs() < EPSILON);
     }
 
     #[test]
     fn rms_detector() {
       let mut detector = RmsEnvDetector::new();
-      assert!((detector.tick(1f32) - 1f32).abs() < EPSILON);
+      assert!((detector.process(1f32) - 1f32).abs() < EPSILON);
     }
   }
 
   mod filter {
     use std::f32::EPSILON;
-    use rasp::traits::Filter;
+    use rasp::traits::Processor;
     use rasp::filter::{
       OnePole,
       OneZero,
@@ -50,42 +50,42 @@ mod api {
     #[test]
     fn one_pole() {
       let mut one_pole = OnePole::new();
-      assert!((one_pole.tick(1f32) - 1f32).abs() < EPSILON);
+      assert!((one_pole.process(1f32) - 1f32).abs() < EPSILON);
     }
 
     #[test]
     fn one_zero() {
       let mut one_zero = OneZero::new();
-      assert!((one_zero.tick(1f32) - 1f32).abs() < EPSILON);
+      assert!((one_zero.process(1f32) - 1f32).abs() < EPSILON);
     }
 
     #[test]
     fn two_pole() {
       let mut two_pole = TwoPole::new();
-      assert!((two_pole.tick(1f32) - 1f32).abs() < EPSILON);
+      assert!((two_pole.process(1f32) - 1f32).abs() < EPSILON);
     }
 
     #[test]
     fn two_zero() {
       let mut two_zero = TwoZero::new();
-      assert!((two_zero.tick(1f32) - 1f32).abs() < EPSILON);
+      assert!((two_zero.process(1f32) - 1f32).abs() < EPSILON);
     }
 
     #[test]
     fn biquad1() {
       let mut biquad  = Biquad1::new();
-      assert!((biquad.tick(1f32) - 1f32).abs() < EPSILON);
+      assert!((biquad.process(1f32) - 1f32).abs() < EPSILON);
     }
 
     #[test]
     fn biquad2() {
       let mut biquad  = Biquad2::new();
-      assert!((biquad.tick(1f32) - 1f32).abs() < EPSILON);
+      assert!((biquad.process(1f32) - 1f32).abs() < EPSILON);
     }
 
     #[cfg(test)]
     mod rbj {
-      use rasp::traits::Filter;
+      use rasp::traits::Processor;
       use rasp::filter::rbj::{
         LowPass,
         HighPass,
@@ -102,70 +102,70 @@ mod api {
       fn lowpass() {
         let mut filter = LowPass::new();
         filter.set_coefficients(44_100f32, 12_000f32, 0.71f32);
-        assert!(filter.tick(0.1f32) != 0.1f32);
+        assert!(filter.process(0.1f32) != 0.1f32);
       }
 
       #[test]
       fn highpass() {
         let mut filter = HighPass::new();
         filter.set_coefficients(44_100f32, 12_000f32, 0.71f32);
-        assert!(filter.tick(0.1f32) != 0.1f32);
+        assert!(filter.process(0.1f32) != 0.1f32);
       }
 
       #[test]
       fn bandpass1() {
         let mut filter = BandPass1::new();
         filter.set_coefficients(44_100f32, 12_000f32, 0.71f32);
-        assert!(filter.tick(0.1f32) != 0.1f32);
+        assert!(filter.process(0.1f32) != 0.1f32);
       }
 
       #[test]
       fn bandpass2() {
         let mut filter = BandPass2::new();
         filter.set_coefficients(44_100f32, 12_000f32, 0.71f32);
-        assert!(filter.tick(0.1f32) != 0.1f32);
+        assert!(filter.process(0.1f32) != 0.1f32);
       }
 
       #[test]
       fn bandstop() {
         let mut filter = BandStop::new();
         filter.set_coefficients(44_100f32, 12_000f32, 0.71f32);
-        assert!(filter.tick(0.1f32) != 0.1f32);
+        assert!(filter.process(0.1f32) != 0.1f32);
       }
 
       #[test]
       fn lowshelf() {
         let mut filter = LowShelf::new();
         filter.set_coefficients(44_100f32, 12_000f32, 3f32, 0.71f32);
-        assert!(filter.tick(0.1f32) != 0.1f32);
+        assert!(filter.process(0.1f32) != 0.1f32);
       }
 
       #[test]
       fn highshelf() {
         let mut filter = HighShelf::new();
         filter.set_coefficients(44_100f32, 12_000f32, 3f32, 0.71f32);
-        assert!(filter.tick(0.1f32) != 0.1f32);
+        assert!(filter.process(0.1f32) != 0.1f32);
       }
 
       #[test]
       fn allpass() {
         let mut filter = AllPass::new();
         filter.set_coefficients(44_100f32, 12_000f32, 0.71f32);
-        assert!(filter.tick(0.1f32) != 0.1f32);
+        assert!(filter.process(0.1f32) != 0.1f32);
       }
 
       #[test]
       fn peak() {
         let mut filter = Peak::new();
         filter.set_coefficients(44_100f32, 12_000f32, 3f32, 0.71f32);
-        assert!(filter.tick(0.1f32) != 0.1f32);
+        assert!(filter.process(0.1f32) != 0.1f32);
       }
     }
   }
 
   mod delay {
     use std::f32::EPSILON;
-    use rasp::traits::Filter;
+    use rasp::traits::Processor;
     use rasp::delay::{
       Delay,
       LinearDelay
@@ -175,16 +175,16 @@ mod api {
     fn delay() {
       // Single sample delay
       let mut delay = Delay::new(1, 4);
-      assert!((delay.tick(1f32) - 0f32).abs() < EPSILON );
-      assert!((delay.tick(0f32) - 1f32).abs() < EPSILON );
+      assert!((delay.process(1f32) - 0f32).abs() < EPSILON );
+      assert!((delay.process(0f32) - 1f32).abs() < EPSILON );
     }
 
     #[test]
     fn linear_delay() {
       // Single sample delay
       let mut delay = LinearDelay::new(1f32, 4);
-      assert!((delay.tick(1f32) - 0f32).abs() < EPSILON );
-      assert!((delay.tick(0f32) - 1f32).abs() < EPSILON );
+      assert!((delay.process(1f32) - 0f32).abs() < EPSILON );
+      assert!((delay.process(0f32) - 1f32).abs() < EPSILON );
     }
   }
 

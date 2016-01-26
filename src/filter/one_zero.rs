@@ -1,7 +1,7 @@
 use num;
 use num::traits::Float;
 
-use traits::Filter;
+use traits::Processor;
 
 /// A single channel, one zero digital filter.
 ///
@@ -52,8 +52,8 @@ impl<T> OneZero<T> where T: Float {
   }
 }
 
-impl<T> Filter<T> for OneZero<T> where T: Float {
-  fn tick(&mut self, sample: T) -> T {
+impl<T> Processor<T> for OneZero<T> where T: Float {
+  fn process(&mut self, sample: T) -> T {
     self.output = self.b0 * sample + self.b1 * self.x_z1;
     self.x_z1 = sample;
     self.output
@@ -72,10 +72,10 @@ impl<T> Filter<T> for OneZero<T> where T: Float {
 mod tests {
   use super::*;
   use std::f32::EPSILON;
-  use ::traits::Filter;
+  use ::traits::Processor;
 
   #[test]
-  fn tick() {
+  fn process() {
     let input = vec![0.55f32, -0.55f32, 0.55f32, -0.55f32, 0.25f32];
     let expected =
       vec![
@@ -85,16 +85,49 @@ mod tests {
          0.605_000_000_000f32,
         -0.515_000_000_000f32
       ];
-    let mut one_zero = OneZero::new();
+    let mut filter = OneZero::new();
+
     for sample in input.iter() {
-      assert!((one_zero.tick(*sample) - sample).abs() < EPSILON);
+      assert!((filter.process(*sample) - sample).abs() < EPSILON);
     }
-    one_zero.clear();
-    one_zero.set_coefficients(-0.3f32, 0.8f32);
+
+    filter.clear();
+    filter.set_coefficients(-0.3f32, 0.8f32);
+
     for i in 0..input.len() {
-      let output = one_zero.tick(input[i]);
+      let output = filter.process(input[i]);
       println!("{:.12} - {:.12} = {:.12}", expected[i], output, expected[i] - output);
       assert!((expected[i] - output).abs() < EPSILON);
+    }
+  }
+
+  #[test]
+  fn process_block() {
+    let input = vec![0.55f32, -0.55f32, 0.55f32, -0.55f32, 0.25f32];
+    let expected =
+      vec![
+        -0.165_000_000_000f32,
+         0.605_000_000_000f32,
+        -0.605_000_000_000f32,
+         0.605_000_000_000f32,
+        -0.515_000_000_000f32
+      ];
+    let mut filter = OneZero::new();
+
+    let mut initial_input = input.clone();
+    let mut last_processed = filter.process_block(&mut initial_input);
+    assert!((last_processed - input.last().unwrap()).abs() < EPSILON);
+
+    filter.clear();
+    filter.set_coefficients(-0.3f32, 0.8f32);
+
+    let mut actual = input.clone();
+    last_processed = filter.process_block(&mut actual);
+    assert!((last_processed - expected.last().unwrap()).abs() < EPSILON);
+
+    for i in 0..input.len() {
+      println!("{:.12} - {:.12} = {:.12}", expected[i], actual[i], expected[i] - actual[i]);
+      assert!((expected[i] - actual[i]).abs() < EPSILON);
     }
   }
 }

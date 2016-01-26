@@ -6,7 +6,7 @@ use num;
 use num::traits::Float;
 
 use traits::{
-  Filter,
+  Processor,
   TappableDelayLine
 };
 
@@ -42,8 +42,7 @@ impl<T> Delay<T> where T: Float {
   /// let mut delay3 = Delay::<f32>::new(delay, max_delay * sample_rate);
   /// let mut delay4 = Delay::<f64>::new(delay, max_delay * sample_rate);
   /// ```
-  pub fn new(delay: usize,
-             max_delay: usize) -> Self {
+  pub fn new(delay: usize, max_delay: usize) -> Self {
     let mut delay_time = delay;
     if delay_time > max_delay {
       delay_time = max_delay;
@@ -106,8 +105,8 @@ impl<T> Delay<T> where T: Float {
   }
 }
 
-impl<T> Filter<T> for Delay<T> where T: Float {
-  fn tick(&mut self, sample: T) -> T {
+impl<T> Processor<T> for Delay<T> where T: Float {
+  fn process(&mut self, sample: T) -> T {
     // write input sample into memory
     self.memory[self.write_ptr] = sample;
     self.write_ptr += 1;
@@ -163,7 +162,7 @@ impl<T> TappableDelayLine<T> for Delay<T> where T: Float {
 mod tests {
   use super::*;
   use std::f32::EPSILON;
-  use ::traits::{Filter, TappableDelayLine};
+  use ::traits::{Processor, TappableDelayLine};
 
   #[test]
   fn new() {
@@ -195,13 +194,13 @@ mod tests {
   }
 
   #[test]
-  fn tick() {
+  fn process() {
     let mut input     = vec![0f32; 5];    input[0] = 1f32;
     let mut expected  = vec![0f32; 5]; expected[4] = 1f32;
     let mut delay     = Delay::<f32>::new(4, 4095);
 
     for (i, sample) in input.iter().enumerate() {
-      assert!((expected[i] - delay.tick(*sample)).abs() < EPSILON);
+      assert!((expected[i] - delay.process(*sample)).abs() < EPSILON);
     }
   }
 
@@ -210,13 +209,13 @@ mod tests {
     let delay_size = 380;
     let mut delay  = Delay::<f32>::new(delay_size, 4095);
     for i in 0..delay_size {
-      assert!((delay.tick(i as f32) - 0f32).abs() < EPSILON);
+      assert!((delay.process(i as f32) - 0f32).abs() < EPSILON);
     }
 
     delay.clear();
 
     for i in 0..delay_size {
-      assert!((delay.tick(i as f32) - 0f32).abs() < EPSILON);
+      assert!((delay.process(i as f32) - 0f32).abs() < EPSILON);
     }
   }
 
@@ -228,7 +227,7 @@ mod tests {
     let mut delay = Delay::<f32>::new(4, 4095);
 
     for sample in input.iter() {
-      delay.tick(*sample);
+      delay.process(*sample);
       assert!((*sample - delay.tap_out(0)).abs() < EPSILON);
     }
 
@@ -249,7 +248,7 @@ mod tests {
     }
 
     for sample in expected.iter() {
-      assert!((*sample - delay.tick(0f32)).abs() < EPSILON);
+      assert!((*sample - delay.process(0f32)).abs() < EPSILON);
     }
   }
 
@@ -265,7 +264,7 @@ mod tests {
     }
 
     for sample in expected.iter() {
-      assert!((*sample - delay.tick(0f32)).abs() < EPSILON);
+      assert!((*sample - delay.process(0f32)).abs() < EPSILON);
     }
   }
 }

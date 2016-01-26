@@ -2,7 +2,7 @@ use num;
 use num::traits::Float;
 
 use filter::Biquad2;
-use traits::{Filter, FloatConst};
+use traits::{FloatConst, Processor};
 
 /// A high-shelf biquad filter.
 pub struct HighShelf<T> {
@@ -62,9 +62,9 @@ impl<T> HighShelf<T> where T: Float + FloatConst {
   }
 }
 
-impl<T> Filter<T> for HighShelf<T> where T: Float {
-  fn tick(&mut self, sample: T) -> T {
-    self.biquad.tick(sample)
+impl<T> Processor<T> for HighShelf<T> where T: Float {
+  fn process(&mut self, sample: T) -> T {
+    self.biquad.process(sample)
   }
 
   fn clear(&mut self) {

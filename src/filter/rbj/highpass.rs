@@ -1,7 +1,7 @@
 use num::traits::Float;
 
 use filter::Biquad2;
-use traits::{Filter, FloatConst};
+use traits::{FloatConst, Processor};
 
 /// A high-pass biquad filter.
 pub struct HighPass<T> {
@@ -52,9 +52,9 @@ impl<T> HighPass<T> where T: Float + FloatConst {
   }
 }
 
-impl<T> Filter<T> for HighPass<T> where T: Float {
-  fn tick(&mut self, sample: T) -> T {
-    self.biquad.tick(sample)
+impl<T> Processor<T> for HighPass<T> where T: Float {
+  fn process(&mut self, sample: T) -> T {
+    self.biquad.process(sample)
   }
 
   fn clear(&mut self) {
@@ -71,7 +71,7 @@ mod tests {
   use super::*;
   use std::f32::EPSILON;
   use std::f32::consts::PI;
-  use ::traits::Filter;
+  use ::traits::Processor;
 
   #[test]
   fn new() {
@@ -97,7 +97,7 @@ mod tests {
   }
 
   #[test]
-  fn tick() {
+  fn process() {
     let input = vec![0.5f32, 0.4f32, 0.3f32, 0.2f32, 0.1f32];
     let expected =
       vec![
@@ -113,7 +113,7 @@ mod tests {
     // No signal change on initialization
     let mut actual: f32;
     for i in 0..input.len() {
-      actual = filter.tick(input[i]);
+      actual = filter.process(input[i]);
       assert!((input[i] - actual).abs() <= EPSILON);
     }
 
@@ -121,7 +121,7 @@ mod tests {
     filter.set_coefficients(44_100f32, 8_000f32, 0.71f32);
 
     for i in 0..input.len() {
-      actual = filter.tick(input[i]);
+      actual = filter.process(input[i]);
       assert!((expected[i] - actual).abs() <= EPSILON);
     }
   }

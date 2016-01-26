@@ -1,7 +1,7 @@
 use num::traits::Float;
 
 use filter::Biquad2;
-use traits::{Filter, FloatConst};
+use traits::{FloatConst, Processor};
 
 /// A band-stop biquad filter.
 ///
@@ -54,9 +54,9 @@ impl<T> BandStop<T> where T: Float + FloatConst {
   }
 }
 
-impl<T> Filter<T> for BandStop<T> where T: Float {
-  fn tick(&mut self, sample: T) -> T {
-    self.biquad.tick(sample)
+impl<T> Processor<T> for BandStop<T> where T: Float {
+  fn process(&mut self, sample: T) -> T {
+    self.biquad.process(sample)
   }
 
   fn clear(&mut self) {
