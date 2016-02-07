@@ -16,11 +16,6 @@ All objects intended to process samples of an audio signal implement the `Proces
 
 Features and components I'd like to add in the future.
 
-- `analysis::EnvelopeDetector`, a general envelope detector?
-  - Must warn in documentation that input must be absolute values
-  - An example of when this is used is for gain changing in compressors
-    - This is where the attack and release of the gain comes from
-    - However, to my understanding, this is a hacky way to implement an envelope
 - `delay::AllpassDelay`, an all-pass interpolating delay-line (see `stk::DelayA`)
 - `examples/effects`
   - Ping-Pong Delay
