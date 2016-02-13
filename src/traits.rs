@@ -67,3 +67,15 @@ pub trait TappableDelayLine<T: Float> {
   /// input.
   fn add_to(&mut self, value: T, tap_delay: usize) -> T;
 }
+
+pub trait Generator<T: Float> {
+  fn tick(&mut self) -> T;
+  fn reset(&mut self);
+}
+
+pub trait Oscillator<T: Float>: Generator<T> {
+  fn get_frequency(&self) -> T;
+  fn get_phase(&self) -> T;
+  fn set_frequency(&mut self, frequency: T);
+  fn set_phase(&mut self, phase: T);
+}
